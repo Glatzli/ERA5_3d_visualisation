@@ -9,3 +9,4 @@ First, plot geopotential as contour lines with temperature or relative humidity 
 2. vertical cross-section west-east
 3. vertical cross-section south-north
 
+bokeh for 

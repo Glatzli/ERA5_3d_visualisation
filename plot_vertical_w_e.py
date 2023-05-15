@@ -10,32 +10,23 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Load ERA5 data from NetCDF file
-ds = xr.open_dataset('./')
+ds = xr.open_dataset('C:/Users/Surface Pro/OneDrive/Dokumente/Uni/Programmieren_test_git/era5_data_april_v1.nc')
 
-# Select a vertical section of data
-section = ds.sel(latitude=slice(60, 30), longitude=slice(-3, 27))
 
-# Extract variables for plotting
-z = section['z'] / 1000  # Convert geopotential height to kilometers
-theta = section['theta']  # Potential temperature
-
-# Create a vertical section plot
+# Create a horizontal
 fig, ax = plt.subplots(figsize=(8, 6))
 
-# Plot geopotential height as lines
-ax.contour(z, colors='black', levels=np.arange(0, 20000, 500), linewidths=0.5)
-
-# Plot potential temperature as filled contours
-cs = ax.contourf(theta, cmap='coolwarm')
-
+ds.isel(level=5, time=5).z.plot.contour(ax= ax, colors='k')
+ds.isel(level=5, time=5).t.plot.contourf(ax= ax, levels=10, cmap='coolwarm')
 # Add colorbar
-plt.colorbar(cs, ax=ax, label='Potential Temperature (K)')
+plt.colorbar(ax=ax, label='Temperature (K)')
 
-# Set axes labels and title
-ax.set_xlabel('Longitude')
-ax.set_ylabel('Pressure (hPa)')
-ax.invert_yaxis()
-ax.set_ylim(ax.get_ylim()[::-1])
-ax.set_title('ERA5 Vertical Section')
+# Create a vertical cross section
+fig, ax = plt.subplots(figsize=(8, 6))
+
+ds.isel(latitude=2, time=5).z.plot.contour(ax= ax, colors='k')
+ds.isel(latitude=2, time=5).t.plot.contourf(ax= ax, levels=10, cmap='coolwarm')
+# Add colorbar
+plt.colorbar(ax=ax, label='Temperature (K)')
 
 plt.show()
