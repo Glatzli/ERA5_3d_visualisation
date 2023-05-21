@@ -8,25 +8,28 @@ Created on Mon May 15 11:06:50 2023
 import xarray as xr
 import matplotlib.pyplot as plt
 import numpy as np
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 
 # Load ERA5 data from NetCDF file
-ds = xr.open_dataset('C:/Users/Surface Pro/OneDrive/Dokumente/Uni/Programmieren_test_git/era5_data_april_v1.nc')
-
+ds = xr.open_dataset(
+    r'C:\Users\Timm\Desktop\Atmospheric Sciences\Semester 2\Advanced Programming\era5_data_april_v1.nc')
 
 # Create a horizontal
 fig, ax = plt.subplots(figsize=(8, 6))
 
-ds.isel(level=5, time=5).z.plot.contour(ax= ax, colors='k')
-ds.isel(level=5, time=5).t.plot.contourf(ax= ax, levels=10, cmap='coolwarm')
-# Add colorbar
-plt.colorbar(ax=ax, label='Temperature (K)')
+ds.isel(latitude=40, time=5).t.plot.contour(ax=ax, colors='k')
+ds.isel(latitude=40, time=5).t.plot.contourf(ax=ax, levels=10, cmap='coolwarm')
 
-# Create a vertical cross section
-fig, ax = plt.subplots(figsize=(8, 6))
+lon = ds.isel(latitude=40, time=5).longitude
+lvl = ds.isel(latitude=40, time=5).level
+u = ds.isel(latitude=40, time=5).u
+w = ds.isel(latitude=40, time=5).w
 
-ds.isel(latitude=2, time=5).z.plot.contour(ax= ax, colors='k')
-ds.isel(latitude=2, time=5).t.plot.contourf(ax= ax, levels=10, cmap='coolwarm')
-# Add colorbar
-plt.colorbar(ax=ax, label='Temperature (K)')
+lvl_interp = np.linspace(lvl.min(), lvl.max(), len(lon))
+u_interp = np.interp(lvl_interp, lvl, u.level)
+w_interp = np.interp(lvl_interp, lvl, w.level)
 
+ax.quiver(lon, lvl_interp, u_interp, w_interp)
+#plt.yscale('log')
 plt.show()
