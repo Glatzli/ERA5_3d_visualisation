@@ -24,12 +24,21 @@ ds.isel(latitude=40, time=5).t.plot.contourf(ax=ax, levels=10, cmap='coolwarm')
 lon = ds.isel(latitude=40, time=5).longitude
 lvl = ds.isel(latitude=40, time=5).level
 u = ds.isel(latitude=40, time=5).u
-w = ds.isel(latitude=40, time=5).w
+omega = ds.isel(latitude=40, time=5).w
 
-lvl_interp = np.linspace(lvl.min(), lvl.max(), len(lon))
-u_interp = np.interp(lvl_interp, lvl, u.level)
-w_interp = np.interp(lvl_interp, lvl, w.level)
 
-ax.quiver(lon, lvl_interp, u_interp, w_interp)
-#plt.yscale('log')
+R = 287.05
+rho = lvl / (R*ds.isel(latitude=40, time=5).t)
+w = - (omega/rho)
+
+u = u/np.sqrt(u**2+w**2)
+w = w/np.sqrt(u**2+w**2)
+
+skip = dict(longitude=slice(None,None,10))
+plt.quiver(lon[::10], lvl, u[skip], w[skip], color='black', scale=40, headwidth=2, headlength=3.5)
+
+
+ax.invert_yaxis()
+
+plt.yscale('log')
 plt.show()
