@@ -13,7 +13,7 @@ import cartopy.feature as cfeature
 
 # Load ERA5 data from NetCDF file
 ds = xr.open_dataset(
-    r'C:\Users\Timm\Desktop\Atmospheric Sciences\Semester 2\Advanced Programming\era5_data_april_v1.nc')
+    r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_april_v1.nc')
 
 # Create a horizontal
 fig, ax = plt.subplots(figsize=(8, 6))
