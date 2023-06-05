@@ -56,7 +56,7 @@ files = os.listdir("../era5horiz_plots/") # list all
 
 def sortby(x):
     try:
-        return int(x.split('_')[1])
+        return int(x.split('_')[2])
     except ValueError:
         return float('inf')
 
@@ -66,6 +66,7 @@ image_paths = []
 levels = []
 timestamps = []
 for file in files: # create lists with all levels, timestamps and filepaths
+    #if file.split('_')[0] # decide on time level
     levels.append(file.split('_')[1])
     timestamps.append(file.split('_')[0])
     image_paths.append("../era5horiz_plots/" + file)
