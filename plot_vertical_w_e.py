@@ -13,32 +13,35 @@ import cartopy.feature as cfeature
 
 # Load ERA5 data from NetCDF file
 ds = xr.open_dataset(
-    r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_april_v1.nc')
+    r'C:\Users\Timm\PycharmProjects\SciProg\era5-3d-visualisation\era5_data_may.nc')
 
-# Create a horizontal
-fig, ax = plt.subplots(figsize=(8, 6))
+def plot_vertical_we(latitude, time):
 
-ds.isel(latitude=40, time=5).t.plot.contour(ax=ax, colors='k')
-ds.isel(latitude=40, time=5).t.plot.contourf(ax=ax, levels=10, cmap='coolwarm')
+    # Create a horizontal
+    fig, ax = plt.subplots(figsize=(8, 6))
 
-lon = ds.isel(latitude=40, time=5).longitude
-lvl = ds.isel(latitude=40, time=5).level
-u = ds.isel(latitude=40, time=5).u
-omega = ds.isel(latitude=40, time=5).w
+    ds.sel(latitude=latitude, time=time).t.plot.contour(ax=ax, colors='k')
+    ds.sel(latitude=latitude, time=time).t.plot.contourf(ax=ax, levels=10, cmap='coolwarm')
 
-
-R = 287.05
-rho = lvl / (R*ds.isel(latitude=40, time=5).t)
-w = - (omega/rho)
-
-u = u/np.sqrt(u**2+w**2)
-w = w/np.sqrt(u**2+w**2)
-
-skip = dict(longitude=slice(None,None,10))
-plt.quiver(lon[::10], lvl, u[skip], w[skip], color='black', scale=40, headwidth=2, headlength=3.5)
+    lon = ds.sel(latitude=latitude, time=time).longitude
+    lvl = ds.sel(latitude=latitude, time=time).level
+    u = ds.sel(latitude=latitude, time=time).u
+    omega = ds.sel(latitude=latitude, time=time).w
 
 
-ax.invert_yaxis()
+    R = 287.05
+    rho = lvl / (R*ds.sel(latitude=latitude, time=time).t)
+    w = - (omega/rho)
 
-plt.yscale('log')
-plt.show()
+    skip = dict(longitude=slice(None,None,10))
+    ax.barbs(lon[::10], lvl, u[skip], w[skip], length=5)
+
+
+    ax.invert_yaxis()
+
+    plt.yscale('log')
+    plt.show()
+
+lon = 40
+t = '2023-05-08T00-00-00'
+plot_vertical_we(lon, t)

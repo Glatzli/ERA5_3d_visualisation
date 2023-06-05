@@ -6,7 +6,7 @@ import cartopy.feature as cfeature
 import os
 
 # Load ERA5 data from NetCDF file
-ds = xr.open_dataset(r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_april_v1.nc')
+ds = xr.open_dataset(r'C:\Users\Timm\PycharmProjects\SciProg\era5-3d-visualisation\era5_data_may.nc')
 
 def plot_horizontal(level, time):
     # Create a horizontal
@@ -29,15 +29,15 @@ def plot_horizontal(level, time):
 
     return fig, ax
 
-levels = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000] # hpa
-time = '2023-04-22T00-00-00' #timestamp
+levels = ds['level'] # hpa
+time = '2023-05-08T00-00-00' #timestamp
 
 for level in levels:
     fig, ax = plot_horizontal(level, time)
-    plt.show()
+    #plt.show()
     
     # save fig to specific dir
     #my_path = os.path.abspath(__file__) # get current path
-    my_file = f'../era5horiz_plots/{time}_{level}_era5_horiz.png'
+    my_file = f'C:/Users/Timm/PycharmProjects/SciProg/era5-3d-visualisation/era5horiz_plots/{time}_{int(level)}_era5_horiz.png'
     
     fig.savefig(my_file, dpi=400)
