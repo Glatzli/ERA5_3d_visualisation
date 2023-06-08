@@ -68,16 +68,21 @@ ds = xr.open_dataset(r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren
 ds = ds.assign(t_c = ds["t"] - 273.15)
 
 levels = ds.level.values # hpa 100, 200, 300, 400, 500, 600, 700,
-times = ds.time.values[0:2]# '2023-04-22T00-00-00' #timestamp
+times = ds.time.values[0:5]# '2023-04-22T00-00-00' #timestamp
 
-for level in levels:
-    for time in times:
+for time in times:
+    time_str = pd.Timestamp(time).strftime("%Y%m%d_%H") # convert time to str for saving
+    try:
+        os.mkdir(f"../era5horiz_plots/{time_str}/")
+        current_dir = f"../era5horiz_plots/{time_str}/"
+    except FileExistsError:
+        current_dir = f"../era5horiz_plots/{time_str}/"
+         
+    for level in levels:
+        my_file = current_dir + f'{time_str}_{level}_era5_horiz.png'
+        if os.path.exists(my_file):
+            continue
+            
         fig, ax = plot_horizontal(level, time)
-        #plt.show()
-        
-        # save fig to specific dir
-        #my_path = os.path.abspath(__file__) # get current path
-        time_str = pd.Timestamp(time).strftime("%Y%m%d_%H") # convert time to str for saving
-        my_file = f'../era5horiz_plots/{time_str}_{level}_era5_horiz.png'
-        
         fig.savefig(my_file, dpi=400)
+        plt.close()
