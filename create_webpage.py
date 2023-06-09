@@ -1,7 +1,4 @@
 import os
-from pathlib import Path
-
-
 
 def generate_era5_visualization(timestamps, levels):
     html_code = f'''<!DOCTYPE html>
