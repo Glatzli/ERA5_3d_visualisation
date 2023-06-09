@@ -1,7 +1,4 @@
-import os
-
-def generate_era5_visualization(timestamps, levels):
-    html_code = f'''<!DOCTYPE html>
+f'''<!DOCTYPE html>
     <html>
     <head>
       <title>ERA5 Data Visualization</title>
@@ -40,8 +37,8 @@ def generate_era5_visualization(timestamps, levels):
         const plotImage = document.getElementById('plot-image');
     
         // Define the timestamps and levels
-        let timestamps = {timestamps};
-        let levels = {levels};
+        const timestamps = {timestamps};
+        const levels = {levels};
         
         let timestampIndex = parseInt(timestampSlider.value);
         let levelIndex = parseInt(levelSlider.value);
@@ -55,7 +52,7 @@ def generate_era5_visualization(timestamps, levels):
         
         levelSlider.addEventListener('input', function() {{
           const levelIndex = parseInt(levelSlider.value);
-	      const imagePath = generateImagePath(timestamps[timestampIndex], levels[levelIndex]);
+	  const imagePath = generateImagePath(timestamps[timestampIndex], levels[levelIndex]);
           plotImage.src = imagePath;
         }});
         
@@ -64,36 +61,8 @@ def generate_era5_visualization(timestamps, levels):
         plotImage.src = initialImagePath;
         
         function generateImagePath(timestamp, level) {{
-            const filepath = '../era5horiz_plots/' + timestamp + '/' + timestamp + '_' + level + '_era5_horiz.png';
-            return filepath;
+          return `../era5horiz_plots/{timestamp}/era5_horiz_l{level}_t{timestamp}.png`;
         }}
-        </script>
+      </script>
     </body>
     </html>'''
-
-    # Write the HTML code to a file
-    with open('era5_visualization.html', 'w') as f:
-        f.write(html_code)
-        
-def sortby(x):
-    try:
-        return int(x.split('_')[2])
-    except ValueError:
-        return float('inf')
-
-
-folders = os.listdir("../era5horiz_plots/")  # list all folders
-timestamps = []; levels = []
-
-for folder in folders: # loop over all timestamp-folders
-    timestamps.append(folder)
-    files = os.listdir(os.path.join("../era5horiz_plots/", folder))
-    files.sort(key=sortby)
-    
-    for file in files: # loop over all level plots in one dir
-        level = file.split('_')[2]
-        if level not in levels:
-            levels.append(level)
-
-generate_era5_visualization(timestamps, levels)
-
