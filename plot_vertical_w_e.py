@@ -10,18 +10,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import os
+import pandas as pd
 
-# Load ERA5 data from NetCDF file
-ds = xr.open_dataset(
-    r'C:\Users\Timm\PycharmProjects\SciProg\era5-3d-visualisation\era5_data_may.nc')
-
-def plot_vertical_we(latitude, time):
+def plot_vertical_we_temp(latitude, time, path):
 
     # Create a horizontal
     fig, ax = plt.subplots(figsize=(8, 6))
 
-    ds.sel(latitude=latitude, time=time).t.plot.contour(ax=ax, colors='k')
-    ds.sel(latitude=latitude, time=time).t.plot.contourf(ax=ax, levels=10, cmap='coolwarm')
+    ds.sel(latitude=latitude, time=time).t_c.plot.contour(ax=ax, colors='k')
+    ds.sel(latitude=latitude, time=time).t_c.plot.contourf(ax=ax, levels=10, cmap='coolwarm')
 
     lon = ds.sel(latitude=latitude, time=time).longitude
     lvl = ds.sel(latitude=latitude, time=time).level
@@ -40,8 +38,29 @@ def plot_vertical_we(latitude, time):
     ax.invert_yaxis()
 
     plt.yscale('log')
-    plt.show()
+    fig.savefig(path, dpi=400)
+    plt.close()
 
-lon = 40
-t = '2023-05-08T00-00-00'
-plot_vertical_we(lon, t)
+
+ds = xr.open_dataset(
+    r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_may_v2.nc')
+ds = ds.assign(t_c = ds["t"] - 273.15)
+
+lats = ds.latitude.values[0::8]
+times = ds.time.values[0:5]
+
+for time in times:
+    time_str = pd.Timestamp(time).strftime("%Y%m%d_%H") # convert time to str for saving
+    if not os.path.exists("../era5vert_w_e/"):
+        os.mkdir("../era5vert_w_e/") 
+    if not os.path.exists(f"../era5vert_w_e/{time_str}/"):
+        os.mkdir(f"../era5vert_w_e/{time_str}/")
+    
+    current_dir = f"../era5vert_w_e/{time_str}/"
+    
+    for lat in lats:
+        path_temp = current_dir + f'{time_str}_{lat}_vert_w_e_temp.png'
+        if os.path.exists(path_temp):
+            continue
+        plot_vertical_we_temp(lat, time, path_temp)
+        
