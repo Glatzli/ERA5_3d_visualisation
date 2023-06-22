@@ -1,13 +1,13 @@
 import xarray as xr
-import matplotlib
+#import matplotlib
+#matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import os
-#matplotlib.use('Agg')
+
 
 def create_fig_national_boundaries():
     """
@@ -19,9 +19,9 @@ def create_fig_national_boundaries():
     ax : axis handle
     """
     # Create a horizontal
-    fig = plt.figure(figsize=(8, 8))
+    fig = plt.figure(figsize=(8, 7))
     ax = plt.axes(projection=ccrs.PlateCarree())
-
+    
     gl = ax.add_feature(cfeature.NaturalEarthFeature( 
         category='cultural',
         name='admin_0_countries',
@@ -31,11 +31,18 @@ def create_fig_national_boundaries():
         linewidth = 0.2
     ))
     
-    lon_formatter = LongitudeFormatter(number_format='.0f')
-    lat_formatter = LatitudeFormatter(number_format='.0f')
-    ax.xaxis.set_major_formatter(lon_formatter)
-    ax.yaxis.set_major_formatter(lat_formatter)
+    # ax.set_xlabel('longitude'); ax.set_ylabel("latitude") #doesn't work!
+    ax.text(-0.1, 0.5, 'latitude', va='bottom', ha='center',
+            rotation='vertical', rotation_mode='anchor',
+            transform=ax.transAxes)
+    ax.text(0.5, -0.1, 'longitude', va='bottom', ha='center',
+            rotation='horizontal', rotation_mode='anchor',
+            transform=ax.transAxes)
     
+    gl = ax.gridlines(crs = ccrs.PlateCarree(), linewidth=0.5, draw_labels=True, 
+                      linestyle='dashed', color='gray', alpha=0.5)
+    
+    gl.right_labels = False; gl.top_labels = False
     ax.set_extent([-4, 26, 31, 60])
     
     return fig, ax
@@ -104,9 +111,9 @@ def plot_horizontal_temp(level, time, path):
     ax.set_title(f"level = {level}, time = {str(time).split(':')[0]}")
     plt.colorbar(mesh_t, ax=ax, label='temperature [°C]')
     
-    #fig.savefig(path, dpi=100)
-    #plt.close()
-    plt.show()
+    fig.savefig(path, dpi=100)
+    plt.close()
+
     
 def plot_horizontal_hum(level, time, path):
     """
@@ -165,8 +172,8 @@ ds = xr.open_dataset(r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren
 ds = ds.assign(t_c = ds["t"] - 273.15) # temp in °C
 
 # extract time and level dimensions from dataset
-levels = ds.level.values[0:1]
-times = ds.time.values[0:1]
+levels = ds.level.values
+times = ds.time.values[0:3]
 
 # loop over timestamps: one folder for each timestamp
 for time in times:
@@ -183,8 +190,8 @@ for time in times:
     for level in levels:
         path_temp = current_dir + f'{time_str}_{level}_horiz_temp.png'
         # if files already exist, don't create new ones
-        #if os.path.exists(path_temp): 
-        #    continue
+        if os.path.exists(path_temp): 
+            continue
         plot_horizontal_temp(level, time, path_temp)
         
     for level in levels:
