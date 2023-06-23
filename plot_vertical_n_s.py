@@ -58,21 +58,36 @@ def plot_vertical_n_s_hum(longitude, time, path):
     ax.set_title(f"lon = {longitude}, time = {str(time).split(':')[0]}")
     
     ax.invert_yaxis()
-
     plt.yscale('log')
     fig.savefig(path, dpi=dpi)
     plt.close()
     #plt.show()
     
+def plot_vertical_n_s_cc(lon, time, path):   
+    fig, ax = plot_vert_n_s_geopotential(lon, time)
+    mesh_cc = ds.sel(longitude=lon, time=time).cc.plot.contourf(ax= ax, cmap=cmap_cloud, 
+                                                       add_colorbar = False)
+    plt.colorbar(mesh_cc, ax=ax, label='cloud cover fraction [0-1]')
+    ax.set_title(f"lon = {lon}, time = {str(time).split(':')[0]}")
+    ax.invert_yaxis()
+    plt.yscale('log')
+    fig.savefig(path, dpi=dpi)
+    plt.close()
+    #plt.show()
 
 # Load ERA5 data from NetCDF file
 ds = xr.open_dataset(
-    r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_may_v2.nc')
+    r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_may_v3.nc')
 ds = ds.assign(t_c = ds["t"] - 273.15)
 
 dpi = 100 # quality of saved png pics
 lons = ds.longitude.values[::8]
 times = ds.time.values
+
+cmap_cloud = plt.get_cmap('Blues', 6)
+
+variables = ["temp, hum, cc"]
+
 
 for time in times:
     time_str = pd.Timestamp(time).strftime("%Y%m%d_%H") # convert time to str for saving
@@ -83,6 +98,19 @@ for time in times:
         os.mkdir(f"../era5vert_n_s/{time_str}/")
     current_dir = f"../era5vert_n_s/{time_str}/"    
     
+    #for var in variables:
+  #      for lon in lons:
+   #         path_temp = current_dir + f'{time_str}_{lon}_vert_n_s_{var}.png'
+    #        if os.path.exists(path_temp):
+     #           continue
+            
+      #      if var == "temp":
+      #          plot_vertical_n_s_temp(lon, time, path_temp)
+      #      elif var == "hum":
+      #          plot_vertical_n_s_hum(lon, time, path_hum)
+      #      elif var == "cc":
+      #          plot_vertical_n_s_cc(lon, time, path_cc)
+       
     for lon in lons:
         path_temp = current_dir + f'{time_str}_{lon}_vert_n_s_temp.png'
         if os.path.exists(path_temp):
@@ -96,5 +124,12 @@ for time in times:
             continue
         
         plot_vertical_n_s_hum(lon, time, path_hum)
+        
+    for lon in lons:
+        path_cc = current_dir + f'{time_str}_{lon}_vert_n_s_cc.png'
+        if os.path.exists(path_cc):
+            continue
+        
+        plot_vertical_n_s_cc(lon, time, path_cc)
         
 

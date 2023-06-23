@@ -150,13 +150,17 @@ def plot_horizontal_hum(level, time, path):
     fig.savefig(path, dpi=dpi)
     plt.close()
     
-def plot_horizontal_pv(level, time, path):   
+def plot_horizontal_cc(level, time, path):   
     fig, ax = create_fig_national_boundaries()
     fig, ax = plot_horizontal_geopotential(level, time, fig, ax)
-    
-    mesh_pv = ds.sel(level=level, time=time).pv.plot.contourf(ax= ax,
-                                                     add_colorbar = False)
-    
+    mesh_cc = ds.sel(level=level, time=time).cc.plot.contourf(ax= ax, cmap=cmap_cloud, 
+                                                       add_colorbar = False)
+    plt.colorbar(mesh_cc, ax=ax, label='cloud cover fraction [0-1]')
+    ax.set_title(f"level = {level}hPa, time = {str(time).split(':')[0]}")
+    fig.savefig(path, dpi=dpi)
+    plt.close()
+    #plt.show()
+
     
 def fmt(x):
     """
@@ -186,13 +190,7 @@ levels = ds.level.values[::2]
 times = ds.time.values
 
 cmap_temp = plt.get_cmap('RdBu_r', 14)
-
-l = levels[2]; t = times[0]
-fig, ax = create_fig_national_boundaries()
-#fig, ax = plot_horizontal_geopotential(l, t, fig, ax)
-
-mesh_pv = ds.sel(level=l, time=t).pv.plot.contourf(ax= ax, add_colorbar = True)
-plt.show()
+cmap_cloud = plt.get_cmap('Blues', 6)
 
 # loop over timestamps: one folder for each timestamp
 for time in times:
@@ -219,8 +217,8 @@ for time in times:
             continue
         plot_horizontal_hum(level, time, path_hum)
         
-    #for level in levels:
-    #    path_pv = current_dir + f'{time_str}_{level}_horiz_precip.png'
-    #    if os.path.exists(path_precip):
-    #        continue
-        #plot_horizontal_precip(level, time, path_precip)
+    for level in levels:
+        path_cc = current_dir + f'{time_str}_{level}_horiz_cc.png'
+        if os.path.exists(path_cc):
+            continue
+        plot_horizontal_cc(level, time, path_cc)

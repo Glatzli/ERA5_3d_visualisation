@@ -68,7 +68,8 @@ latSlider = pn.widgets.DiscreteSlider(name = 'latitude:', options = lats, value 
                                       width=w_s, height=h_s, margin=margin) 
 
 variable_selection = pn.widgets.RadioBoxGroup(name='RadioBoxGroup', options=['Geopotential and Temperature', 
-                                                                      'relativ humidity'], inline=False)
+                                                                      'relativ humidity',
+                                                                      "cloud coverage"], inline=False)
 
 init_horiz_path = '../era5horiz/' + timestamps[0] + '/' + timestamps[0] + '_' + levels[0] + '_horiz_temp.png'
 init_vert_w_e_path = '../era5vert_w_e/' + timestamps[0] + '/' + timestamps[0] + '_' + lats[0] + '_vert_w_e_temp.png'
@@ -106,6 +107,8 @@ def update_file_path(event):
         fileending = 'temp'
     elif variable == 'relativ humidity':
         fileending = 'hum'
+    elif variable == "cloud coverage":
+        fileending = 'cc'
     
     horiz_image.object = '../era5horiz/' + timestamp + '/' + timestamp + '_' + level + '_horiz_' + fileending + '.png';
     vert_w_e_image.object = '../era5vert_w_e/' + timestamp + '/' + timestamp + '_' + lat + '_vert_w_e_' + fileending + '.png';
