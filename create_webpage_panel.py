@@ -57,25 +57,28 @@ pn.extension()
 
 # setup widgets, for level&lon slider different height margins (because in 2nd line):
 timestampSlider = pn.widgets.DiscreteSlider(name = 'timestamp:', options = timestamps, 
-                                            value=timestamps[0], width=w_s, height=h_s, margin=margin) 
-levelSlider = pn.widgets.DiscreteSlider(name = 'level:', options = levels, value = levels[0],
+                                            value=timestamps[0], width=w_s, height=h_s, margin=margin,
+                                            tooltips = True) 
+levelSlider = pn.widgets.DiscreteSlider(name = 'level:', options = levels[::2], value = levels[0],
                                         width=w_s, height=h_s, margin=(30, margin)) 
 
 lonSlider = pn.widgets.DiscreteSlider(name = 'longitude:', options = lons, value = lons[0], 
                                       width=w_s, height=h_s, margin=(30, margin))
 latSlider = pn.widgets.DiscreteSlider(name = 'latitude:', options = lats, value = lats[0], 
                                       width=w_s, height=h_s, margin=margin) 
-    
+
+variable_selection = pn.widgets.RadioBoxGroup(name='RadioBoxGroup', options=['Geopotential and Temperature', 
+                                                                      'relativ humidity'], inline=False)
+
 init_horiz_path = '../era5horiz/' + timestamps[0] + '/' + timestamps[0] + '_' + levels[0] + '_horiz_temp.png'
+init_vert_w_e_path = '../era5vert_w_e/' + timestamps[0] + '/' + timestamps[0] + '_' + lats[0] + '_vert_w_e_temp.png'
+init_vert_n_s_path = '../era5vert_n_s/' + timestamps[0] + '/' + timestamps[0] + '_' + lons[0] + '_vert_n_s_temp.png'
 
 # Define the PNG pane
 horiz_image = pn.pane.PNG(object=init_horiz_path, width = w, height = h)
-vert_w_e_image = pn.pane.PNG(object='../era5vert_w_e/' + timestamps[0] + '/' + 
-                             timestamps[0] + '_' + lats[0] + '_vert_w_e_temp.png', 
-                             width = w, height = h)
-vert_n_s_image = pn.pane.PNG(object='../era5vert_n_s/' + timestamps[0] + '/' + 
-                             timestamps[0] + '_' + lons[0] + '_vert_n_s_temp.png', 
-                             width = w, height = h, margin=(50, 0))
+vert_w_e_image = pn.pane.PNG(object=init_vert_w_e_path, width = w, height = h)
+vert_n_s_image = pn.pane.PNG(object=init_vert_n_s_path, width = w, height = h, 
+                             margin=(0, 0))
 
 
 def update_file_path(event):
@@ -97,18 +100,25 @@ def update_file_path(event):
     level = levelSlider.value
     lat = latSlider.value
     lon = lonSlider.value
+    variable = variable_selection.value
     
-    horiz_image.object = '../era5horiz/' + timestamp + '/' + timestamp + '_' + level + '_horiz_temp.png';
-    vert_w_e_image.object = '../era5vert_w_e/' + timestamp + '/' + timestamp + '_' + lat + '_vert_w_e_temp.png';
-    vert_n_s_image.object = '../era5vert_n_s/' + timestamp + '/' + timestamp + '_' + lon + '_vert_n_s_temp.png';
+    if variable == 'Geopotential and Temperature':
+        fileending = 'temp'
+    elif variable == 'relativ humidity':
+        fileending = 'hum'
+    
+    horiz_image.object = '../era5horiz/' + timestamp + '/' + timestamp + '_' + level + '_horiz_' + fileending + '.png';
+    vert_w_e_image.object = '../era5vert_w_e/' + timestamp + '/' + timestamp + '_' + lat + '_vert_w_e_' + fileending + '.png';
+    vert_n_s_image.object = '../era5vert_n_s/' + timestamp + '/' + timestamp + '_' + lon + '_vert_n_s_' + fileending + '.png';
     
 
 timestampSlider.param.watch(update_file_path, 'value')
 levelSlider.param.watch(update_file_path, 'value')
 latSlider.param.watch(update_file_path, 'value')
 lonSlider.param.watch(update_file_path, 'value')
+variable_selection.param.watch(update_file_path, 'value')
 
 # page setup:
-pn.Row(pn.Column(timestampSlider, levelSlider, horiz_image),
-       pn.Column(latSlider, lonSlider, vert_w_e_image),
-       pn.Column(vert_n_s_image), sizing_mode='stretch_both').servable()
+pn.Row(pn.Column(latSlider, lonSlider, horiz_image),
+       pn.Column(timestampSlider, levelSlider, vert_w_e_image),
+       pn.Column(variable_selection, vert_n_s_image), sizing_mode='stretch_both').servable()

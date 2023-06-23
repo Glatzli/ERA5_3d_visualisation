@@ -1,6 +1,6 @@
 import xarray as xr
-#import matplotlib
-#matplotlib.use('Qt5Agg')
+import matplotlib
+#matplotlib.use('QtAgg')
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -87,11 +87,13 @@ def plot_horizontal_temp(level, time, path):
     """
     fig, ax = create_fig_national_boundaries()
     fig, ax = plot_horizontal_geopotential(level, time, fig, ax)
-    
-    cmap=plt.get_cmap('RdBu_r', 14)
-    
-    if level <= 300: # set min/maxs of colormap according to pressure level
+       
+    if level <= 250: # set min/maxs of colormap according to pressure level
         vmax = -25; vmin = -85
+    elif level <= 350:
+        vmax = -15; vmin = -75
+    elif level <= 400:
+        vmax = -5; vmin = -65
     elif level <= 500:
         vmax = 10; vmin = -50
     elif level <= 700:
@@ -106,12 +108,12 @@ def plot_horizontal_temp(level, time, path):
         vmax = 45; vmin = -15
     
     mesh_t = ds.sel(level=level, time=time).t_c.plot.contourf(ax= ax, levels=np.arange(vmin,  vmax, 5), 
-                                                     cmap=cmap, vmin=vmin, vmax=vmax,
+                                                     cmap=cmap_temp, vmin=vmin, vmax=vmax,
                                                      add_colorbar = False)
     ax.set_title(f"level = {level}, time = {str(time).split(':')[0]}")
     plt.colorbar(mesh_t, ax=ax, label='temperature [°C]')
     
-    fig.savefig(path, dpi=100)
+    fig.savefig(path, dpi=dpi)
     plt.close()
 
     
@@ -145,10 +147,17 @@ def plot_horizontal_hum(level, time, path):
     cbar.set_ticks([0.5, 1.5])
     cbar.set_ticklabels(['> 75', '> 90'])
     ax.set_title(f"level = {level}hPa, time = {str(time).split(':')[0]}")
-    fig.savefig(path, dpi=100)
+    fig.savefig(path, dpi=dpi)
     plt.close()
     
-
+def plot_horizontal_pv(level, time, path):   
+    fig, ax = create_fig_national_boundaries()
+    fig, ax = plot_horizontal_geopotential(level, time, fig, ax)
+    
+    mesh_pv = ds.sel(level=level, time=time).pv.plot.contourf(ax= ax,
+                                                     add_colorbar = False)
+    
+    
 def fmt(x):
     """
     formats the labels of geopotential height to 10m
@@ -168,12 +177,22 @@ def fmt(x):
     
 
 # Load ERA5 data from NetCDF file
-ds = xr.open_dataset(r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_may_v2.nc')
+ds = xr.open_dataset(r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_may_v3.nc')
 ds = ds.assign(t_c = ds["t"] - 273.15) # temp in °C
 
+dpi = 100 # quality of saved png pics
 # extract time and level dimensions from dataset
-levels = ds.level.values
-times = ds.time.values[0:3]
+levels = ds.level.values[::2]
+times = ds.time.values
+
+cmap_temp = plt.get_cmap('RdBu_r', 14)
+
+l = levels[2]; t = times[0]
+fig, ax = create_fig_national_boundaries()
+#fig, ax = plot_horizontal_geopotential(l, t, fig, ax)
+
+mesh_pv = ds.sel(level=l, time=t).pv.plot.contourf(ax= ax, add_colorbar = True)
+plt.show()
 
 # loop over timestamps: one folder for each timestamp
 for time in times:
@@ -199,3 +218,9 @@ for time in times:
         if os.path.exists(path_hum):
             continue
         plot_horizontal_hum(level, time, path_hum)
+        
+    #for level in levels:
+    #    path_pv = current_dir + f'{time_str}_{level}_horiz_precip.png'
+    #    if os.path.exists(path_precip):
+    #        continue
+        #plot_horizontal_precip(level, time, path_precip)
