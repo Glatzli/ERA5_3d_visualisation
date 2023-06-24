@@ -12,15 +12,20 @@ import os
 import pandas as pd
 
 
-def plot_vert_w_e_geopotential(latitude, time):
+def plot_vert_w_e_temp_lines(latitude, time, pot):
     fig, ax = plt.subplots(figsize=(8, 7))
-    ds.sel(latitude=latitude, time=time).t_c.plot.contour(ax=ax, colors='k')
-
+    if pot == True:
+        ds.sel(latitude=latitude, time=time).t_pot.plot.contour(ax=ax, levels=contour_lvls, colors='k')
+    if pot == False:
+        ds.sel(latitude=latitude, time=time).t_c.plot.contour(ax=ax, levels=contour_lvls, colors='k')
     return fig, ax
 
-def plot_vertical_we_temp(latitude, time, path):
-    fig, ax = plot_vert_w_e_geopotential(latitude, time)
-    ds.sel(latitude=latitude, time=time).t_c.plot.contourf(ax=ax, levels=10, cmap='coolwarm')
+def plot_vertical_w_e_temp(latitude, time, path, pot):
+    fig, ax = plot_vert_w_e_temp_lines(latitude, time, pot)
+    if pot == True:
+        ds.sel(latitude=latitude, time=time).t_pot.plot.contourf(ax=ax, levels=contour_lvls, cmap='coolwarm')
+    if pot == False:
+        ds.sel(latitude=latitude, time=time).t_c.plot.contourf(ax=ax, levels=contour_lvls, cmap='coolwarm')
 
     lon = ds.sel(latitude=latitude, time=time).longitude
     lvl = ds.sel(latitude=latitude, time=time).level
@@ -52,14 +57,13 @@ def plot_vertical_we_temp(latitude, time, path):
     ax.fill_between(sp.longitude, sp.sp, 1000, color = 'grey')
 
     ax.invert_yaxis()
-
     plt.yscale('log')
     fig.savefig(path, dpi=dpi)
     plt.close()
-
+    # plt.show()
 
 def plot_vertical_w_e_hum(latitude, time, path):
-    fig, ax = plot_vert_w_e_geopotential(latitude, time)
+    fig, ax = plot_vert_w_e_temp_lines(latitude, time, False)
     # Apply the masks to the data variable
     masked_data = xr.where(ds['r'] > 90, 2, xr.where(ds['r'] > 75, 1, np.nan))
 
@@ -80,16 +84,32 @@ def plot_vertical_w_e_hum(latitude, time, path):
     plt.close()
     #plt.show()
 
+def plot_vertical_w_e_cc(lon, time, path):
+    fig, ax = plot_vert_w_e_temp_lines(lon, time, False)
+    mesh_cc = ds.sel(latitude=lat, time=time).cc.plot.contourf(ax=ax, cmap=cmap_cloud,
+                                                                add_colorbar=False)
+    plt.colorbar(mesh_cc, ax=ax, label='cloud cover fraction [0-1]')
+    ax.set_title(f"lon = {lon}, time = {str(time).split(':')[0]}")
+    ax.invert_yaxis()
+    plt.yscale('log')
+    fig.savefig(path, dpi=dpi)
+    plt.close()
+    # plt.show()
+
 
 ds = xr.open_dataset(
-    r'C:\Users\Timm\PycharmProjects\SciProg\era5-3d-visualisation\era5_data_may.nc')
+    r'C:\Users\Timm\PycharmProjects\SciProg\era5-3d-visualisation\era5_data_may_v3.nc')
 surface_p = xr.open_dataset(
     r'C:\Users\Timm\PycharmProjects\SciProg\era5-3d-visualisation\surface_p.nc')
 ds = ds.assign(t_c = ds["t"] - 273.15)
+ds = ds.assign(t_pot = ds["t"] * (1000 / ds.level) ** (2 / 7))
 
 dpi = 100 # quality of saved png pics
 lats = ds.latitude.values[::8]
 times = ds.time.values
+contour_lvls = 10
+
+cmap_cloud = plt.get_cmap('Blues', 6)
 
 for time in times:
     time_str = pd.Timestamp(time).strftime("%Y%m%d_%H") # convert time to str for saving
@@ -104,7 +124,13 @@ for time in times:
         path_temp = current_dir + f'{time_str}_{lat}_vert_w_e_temp.png'
         if os.path.exists(path_temp):
             continue
-        plot_vertical_we_temp(lat, time, path_temp)
+        plot_vertical_w_e_temp(lat, time, path_temp, pot = False)
+
+    for lat in lats:
+        path_temp = current_dir + f'{time_str}_{lat}_vert_w_e_pot_temp.png'
+        if os.path.exists(path_temp):
+            continue
+        plot_vertical_w_e_temp(lat, time, path_temp, pot = True)
 
     for lat in lats:
         path_hum = current_dir + f'{time_str}_{lat}_vert_w_e_hum.png'
@@ -112,4 +138,11 @@ for time in times:
             continue
 
         plot_vertical_w_e_hum(lat, time, path_hum)
+
+    for lat in lats:
+        path_cc = current_dir + f'{time_str}_{lat}_vert_n_s_cc.png'
+        if os.path.exists(path_cc):
+            continue
+
+        plot_vertical_w_e_cc(lat, time, path_cc)
 

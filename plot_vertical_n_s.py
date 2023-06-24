@@ -13,21 +13,21 @@ import pandas as pd
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
-# Load ERA5 data from NetCDF file
-ds = xr.open_dataset(
-    r'C:\Users\Timm\PycharmProjects\SciProg\era5-3d-visualisation\era5_data_may.nc')
-surface_p = xr.open_dataset(
-    r'C:\Users\Timm\PycharmProjects\SciProg\era5-3d-visualisation\surface_p.nc')
 
-def plot_vert_n_s_geopotential(longitude, time):
+def plot_vert_n_s_temp_lines(longitude, time, pot):
     fig, ax = plt.subplots(figsize=(8, 7))
-    ds.sel(longitude=longitude, time=time).t_c.plot.contour(ax=ax, colors='k')
-
+    if pot == True:
+        ds.sel(longitude=longitude, time=time).t_pot.plot.contour(ax=ax, levels=contour_lvls, colors='k')
+    if pot == False:
+        ds.sel(longitude=longitude, time=time).t_c.plot.contour(ax=ax, levels=contour_lvls, colors='k')
     return fig, ax
 
-def plot_vertical_n_s_temp(longitude, time, path):
-    fig, ax = plot_vert_n_s_geopotential(lon, time)
-    ds.sel(longitude=longitude, time=time).t_c.plot.contourf(ax=ax, levels=10, cmap='coolwarm')
+def plot_vertical_n_s_temp(longitude, time, path, pot):
+    fig, ax = plot_vert_n_s_temp_lines(lon, time, pot)
+    if pot == True:
+        ds.sel(longitude=longitude, time=time).t_pot.plot.contourf(ax=ax, levels=contour_lvls, cmap='coolwarm')
+    if pot == False:
+        ds.sel(longitude=longitude, time=time).t_c.plot.contourf(ax=ax, levels=contour_lvls, cmap='coolwarm')
 
     lat = ds.sel(longitude=longitude, time=time).latitude
     lvl = ds.sel(longitude=longitude, time=time).level
@@ -44,9 +44,6 @@ def plot_vertical_n_s_temp(longitude, time, path):
 
     skip_up = dict(level=slice(None, 11, None))
     skip_down = dict(level=slice(12, None, 3))
-
-    skip = dict(latitude=slice(None,None,10))
-    ax.barbs(lat[::10], lvl, v[skip], w[skip], length=5)
 
     lvl_up = lvl[skip_up]
     v_up = v[skip_up]
@@ -68,7 +65,7 @@ def plot_vertical_n_s_temp(longitude, time, path):
     #plt.show()
 
 def plot_vertical_n_s_hum(longitude, time, path):
-    fig, ax = plot_vert_n_s_geopotential(lon, time)
+    fig, ax = plot_vert_n_s_temp_lines(lon, time, False)
     # Apply the masks to the data variable
     masked_data = xr.where(ds['r'] > 90, 2, xr.where(ds['r'] > 75, 1, np.nan))
 
@@ -88,7 +85,7 @@ def plot_vertical_n_s_hum(longitude, time, path):
     #plt.show()
 
 def plot_vertical_n_s_cc(lon, time, path):
-    fig, ax = plot_vert_n_s_geopotential(lon, time)
+    fig, ax = plot_vert_n_s_temp_lines(lon, time, False)
     mesh_cc = ds.sel(longitude=lon, time=time).cc.plot.contourf(ax= ax, cmap=cmap_cloud,
                                                        add_colorbar = False)
     plt.colorbar(mesh_cc, ax=ax, label='cloud cover fraction [0-1]')
@@ -101,18 +98,20 @@ def plot_vertical_n_s_cc(lon, time, path):
 
 # Load ERA5 data from NetCDF file
 ds = xr.open_dataset(
-    r'C:\Users\Timm\PycharmProjects\SciProg\era5-3d-visualisation\era5_data_may.nc')
+    r'C:\Users\Timm\PycharmProjects\SciProg\era5-3d-visualisation\era5_data_may_v3.nc')
 surface_p = xr.open_dataset(
     r'C:\Users\Timm\PycharmProjects\SciProg\era5-3d-visualisation\surface_p.nc')
 ds = ds.assign(t_c = ds["t"] - 273.15)
+ds = ds.assign(t_pot = ds["t"] * (1000 / ds.level) ** (2 / 7))
 
 dpi = 100 # quality of saved png pics
 lons = ds.longitude.values[::8]
 times = ds.time.values
+contour_lvls = 10
 
 cmap_cloud = plt.get_cmap('Blues', 6)
 
-variables = ["temp, hum, cc"]
+#variables = ["temp, hum, cc"]
 
 
 for time in times:
@@ -142,7 +141,14 @@ for time in times:
         if os.path.exists(path_temp):
             continue
 
-        plot_vertical_n_s_temp(lon, time, path_temp)
+        plot_vertical_n_s_temp(lon, time, path_temp, pot = False)
+
+    for lon in lons:
+        path_temp = current_dir + f'{time_str}_{lon}_vert_n_s_pot_temp.png'
+        if os.path.exists(path_temp):
+            continue
+
+        plot_vertical_n_s_temp(lon, time, path_temp, pot = True)
 
     for lon in lons:
         path_hum = current_dir + f'{time_str}_{lon}_vert_n_s_hum.png'
