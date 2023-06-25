@@ -70,7 +70,7 @@ def plot_horizontal_geopotential(level, time, fig, ax):
     
     return fig, ax
 
-def plot_horizontal_temp(level, time, path):
+def plot_horizontal_temp(level, time, path, pot):
     """
     plot geopotential and temp and save it
 
@@ -79,6 +79,7 @@ def plot_horizontal_temp(level, time, path):
     level : height level [hpa]
     time : current timestamp (dimension value of dataset)
     path : path to current file incl. corresponding filename
+    pot : bool for using potential temperature
 
     Returns
     -------
@@ -106,10 +107,17 @@ def plot_horizontal_temp(level, time, path):
         vmax = 40; vmin = -20
     else:
         vmax = 45; vmin = -15
-    
-    mesh_t = ds.sel(level=level, time=time).t_c.plot.contourf(ax= ax, levels=np.arange(vmin,  vmax, 5), 
-                                                     cmap=cmap_temp, vmin=vmin, vmax=vmax,
-                                                     add_colorbar = False)
+
+    if pot == True:
+        vmin = np.min(ds.t_pot.values)
+        vmax = np.max(ds.t_pot.values)
+        mesh_t = ds.sel(level=level, time=time).t_pot.plot.contourf(ax= ax, levels=np.arange(vmin,  vmax, 5),
+                                                         cmap=cmap_temp, vmin=vmin, vmax=vmax,
+                                                         add_colorbar = False)
+    if pot == False:
+        mesh_t = ds.sel(level=level, time=time).t_c.plot.contourf(ax=ax, levels=np.arange(vmin, vmax, 5),
+                                                              cmap=cmap_temp, vmin=vmin, vmax=vmax,
+                                                              add_colorbar=False)
     ax.set_title(f"level = {level}, time = {str(time).split(':')[0]}")
     plt.colorbar(mesh_t, ax=ax, label='temperature [°C]')
     
@@ -181,8 +189,9 @@ def fmt(x):
     
 
 # Load ERA5 data from NetCDF file
-ds = xr.open_dataset(r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_may_v3.nc')
+ds = xr.open_dataset(r'C:\Users\Timm\PycharmProjects\SciProg\era5-3d-visualisation\era5_data_may_v3.nc')
 ds = ds.assign(t_c = ds["t"] - 273.15) # temp in °C
+ds = ds.assign(t_pot = ds["t"] * (1000 / ds.level) ** (2 / 7))
 
 dpi = 100 # quality of saved png pics
 # extract time and level dimensions from dataset
@@ -209,7 +218,14 @@ for time in times:
         # if files already exist, don't create new ones
         if os.path.exists(path_temp): 
             continue
-        plot_horizontal_temp(level, time, path_temp)
+        plot_horizontal_temp(level, time, path_temp, False)
+
+    for level in levels:
+        path_temp = current_dir + f'{time_str}_{level}_horiz_pot_temp.png'
+        # if files already exist, don't create new ones
+        if os.path.exists(path_temp):
+            continue
+        plot_horizontal_temp(level, time, path_temp, True)
         
     for level in levels:
         path_hum = current_dir + f'{time_str}_{level}_horiz_hum.png'

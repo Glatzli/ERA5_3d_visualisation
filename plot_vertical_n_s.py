@@ -15,6 +15,21 @@ import cartopy.feature as cfeature
 
 
 def plot_vert_n_s_temp_lines(longitude, time, pot):
+    """
+    creates a figure and axis and plots temperature contour lines on it
+
+    Parameters
+    ----------
+    longitude : longitude of dataset
+    time : current timestamp (dimension value of dataset)
+    pot : bool for using potential temperature
+
+    Returns
+    -------
+    fig : current figure handle
+    ax : current axis handle
+
+    """
     fig, ax = plt.subplots(figsize=(8, 7))
     if pot == True:
         ds.sel(longitude=longitude, time=time).t_pot.plot.contour(ax=ax, levels=contour_lvls, colors='k')
@@ -23,11 +38,26 @@ def plot_vert_n_s_temp_lines(longitude, time, pot):
     return fig, ax
 
 def plot_vertical_n_s_temp(longitude, time, path, pot):
+    """
+    plots the vertical north south temperature cut and the corresponding wind barbs
+
+    Parameters
+    ----------
+    longitude : longitude of dataset
+    time : current timestamp (dimension value of dataset)
+    path : path to current file incl. corresponding filename
+    pot : bool for using potential temperature
+
+    Returns
+    -------
+    None
+
+    """
     fig, ax = plot_vert_n_s_temp_lines(lon, time, pot)
     if pot == True:
-        ds.sel(longitude=longitude, time=time).t_pot.plot.contourf(ax=ax, levels=contour_lvls, cmap='coolwarm')
+        ds.sel(longitude=longitude, time=time).t_pot.plot.contourf(ax=ax, levels=contour_lvls, cmap='coolwarm', vmin=vmin_pot, vmax=vmax_pot)
     if pot == False:
-        ds.sel(longitude=longitude, time=time).t_c.plot.contourf(ax=ax, levels=contour_lvls, cmap='coolwarm')
+        ds.sel(longitude=longitude, time=time).t_c.plot.contourf(ax=ax, levels=contour_lvls, cmap='coolwarm', vmin=vmin_c, vmax=vmax_c)
 
     lat = ds.sel(longitude=longitude, time=time).latitude
     lvl = ds.sel(longitude=longitude, time=time).level
@@ -64,7 +94,24 @@ def plot_vertical_n_s_temp(longitude, time, path, pot):
     plt.close()
     #plt.show()
 
+    return
+
 def plot_vertical_n_s_hum(longitude, time, path):
+    """
+    plots the vertical north south temperature contour lines and relative humidity
+
+    Parameters
+    ----------
+    longitude : longitude of dataset
+    time : current timestamp (dimension value of dataset)
+    path : path to current file incl. corresponding filename
+    pot : bool for using potential temperature
+
+    Returns
+    -------
+    None
+
+    """
     fig, ax = plot_vert_n_s_temp_lines(lon, time, False)
     # Apply the masks to the data variable
     masked_data = xr.where(ds['r'] > 90, 2, xr.where(ds['r'] > 75, 1, np.nan))
@@ -83,8 +130,24 @@ def plot_vertical_n_s_hum(longitude, time, path):
     fig.savefig(path, dpi=dpi)
     plt.close()
     #plt.show()
+    return
 
 def plot_vertical_n_s_cc(lon, time, path):
+    """
+    plots the vertical north south temperature contour lines and cloud cover
+
+    Parameters
+    ----------
+    lon : longitude of dataset
+    time : current timestamp (dimension value of dataset)
+    path : path to current file incl. corresponding filename
+    pot : bool for using potential temperature
+
+    Returns
+    -------
+    None
+
+    """
     fig, ax = plot_vert_n_s_temp_lines(lon, time, False)
     mesh_cc = ds.sel(longitude=lon, time=time).cc.plot.contourf(ax= ax, cmap=cmap_cloud,
                                                        add_colorbar = False)
@@ -95,6 +158,7 @@ def plot_vertical_n_s_cc(lon, time, path):
     fig.savefig(path, dpi=dpi)
     plt.close()
     #plt.show()
+    return
 
 # Load ERA5 data from NetCDF file
 ds = xr.open_dataset(
@@ -108,6 +172,10 @@ dpi = 100 # quality of saved png pics
 lons = ds.longitude.values[::8]
 times = ds.time.values
 contour_lvls = 10
+vmin_c = np.min(ds.t_c.values)
+vmax_c = np.max(ds.t_c.values)
+vmin_pot = np.min(ds.t_pot.values)
+vmax_pot = np.max(ds.t_pot.values)
 
 cmap_cloud = plt.get_cmap('Blues', 6)
 
@@ -122,19 +190,6 @@ for time in times:
     if not os.path.exists(f"../era5vert_n_s/{time_str}/"):
         os.mkdir(f"../era5vert_n_s/{time_str}/")
     current_dir = f"../era5vert_n_s/{time_str}/"
-
-    #for var in variables:
-  #      for lon in lons:
-   #         path_temp = current_dir + f'{time_str}_{lon}_vert_n_s_{var}.png'
-    #        if os.path.exists(path_temp):
-     #           continue
-
-      #      if var == "temp":
-      #          plot_vertical_n_s_temp(lon, time, path_temp)
-      #      elif var == "hum":
-      #          plot_vertical_n_s_hum(lon, time, path_hum)
-      #      elif var == "cc":
-      #          plot_vertical_n_s_cc(lon, time, path_cc)
 
     for lon in lons:
         path_temp = current_dir + f'{time_str}_{lon}_vert_n_s_temp.png'
