@@ -67,13 +67,15 @@ lonSlider = pn.widgets.DiscreteSlider(name = 'longitude:', options = lons, value
 latSlider = pn.widgets.DiscreteSlider(name = 'latitude:', options = lats, value = lats[0], 
                                       width=w_s, height=h_s, margin=margin) 
 
-variable_selection = pn.widgets.RadioBoxGroup(name='RadioBoxGroup', options=['Geopotential and Temperature', 
+variable_selection = pn.widgets.RadioBoxGroup(name='RadioBoxGroup', options=['Geopotential and potential Temperature',
+                                                                             "Geopotential and Temperature",
                                                                       'relativ humidity',
                                                                       "cloud coverage"], inline=False)
 
-init_horiz_path = '../era5horiz/' + timestamps[0] + '/' + timestamps[0] + '_' + levels[0] + '_horiz_temp.png'
-init_vert_w_e_path = '../era5vert_w_e/' + timestamps[0] + '/' + timestamps[0] + '_' + lats[0] + '_vert_w_e_temp.png'
-init_vert_n_s_path = '../era5vert_n_s/' + timestamps[0] + '/' + timestamps[0] + '_' + lons[0] + '_vert_n_s_temp.png'
+# default is potential temperature
+init_horiz_path = '../era5horiz/' + timestamps[0] + '/' + timestamps[0] + '_' + levels[0] + '_horiz_pot_temp.png'
+init_vert_w_e_path = '../era5vert_w_e/' + timestamps[0] + '/' + timestamps[0] + '_' + lats[0] + '_vert_w_e_pot_temp.png'
+init_vert_n_s_path = '../era5vert_n_s/' + timestamps[0] + '/' + timestamps[0] + '_' + lons[0] + '_vert_n_s_pot_temp.png'
 
 # Define the PNG pane
 horiz_image = pn.pane.PNG(object=init_horiz_path, width = w, height = h)
@@ -105,6 +107,8 @@ def update_file_path(event):
     
     if variable == 'Geopotential and Temperature':
         fileending = 'temp'
+    elif variable == "Geopotential and potential Temperature":
+        fileending = "pot_temp"
     elif variable == 'relativ humidity':
         fileending = 'hum'
     elif variable == "cloud coverage":

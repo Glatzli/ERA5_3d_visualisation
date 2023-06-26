@@ -70,7 +70,7 @@ def plot_horizontal_geopotential(level, time, fig, ax):
     
     return fig, ax
 
-def plot_horizontal_temp(level, time, path):
+def plot_horizontal_temp(level, time, path, pot):
     """
     plot geopotential and temp and save it
 
@@ -88,30 +88,43 @@ def plot_horizontal_temp(level, time, path):
     fig, ax = create_fig_national_boundaries()
     fig, ax = plot_horizontal_geopotential(level, time, fig, ax)
        
-    if level <= 250: # set min/maxs of colormap according to pressure level
-        vmax = -25; vmin = -85
-    elif level <= 350:
-        vmax = -15; vmin = -75
-    elif level <= 400:
-        vmax = -5; vmin = -65
-    elif level <= 500:
-        vmax = 10; vmin = -50
-    elif level <= 700:
-        vmax = 25; vmin = -35
-    elif level <= 800:
-        vmax = 30; vmin = -30
-    elif level <= 850:
-        vmax = 35; vmin = -25
-    elif level <= 925:
-        vmax = 40; vmin = -20
-    else:
-        vmax = 45; vmin = -15
     
-    mesh_t = ds.sel(level=level, time=time).t_c.plot.contourf(ax= ax, levels=np.arange(vmin,  vmax, 5), 
+    if pot:
+        vmin = np.min(ds.t_pot.values)
+        vmax = np.max(ds.t_pot.values)
+
+        mesh_t = ds.sel(level=level, time=time).t_pot.plot.contourf(ax= ax,
+                                                     cmap=cmap_temp,
+                                                     levels=np.arange(vmin,  vmax, 5),
+                                                     vmin = vmin, vmax = vmax,
+                                                     add_colorbar = False)
+        # vmin=vmin, vmax=vmax, levels=np.arange(vmin,  vmax, 5), 
+        plt.colorbar(mesh_t, ax=ax, label='pot temperature [K]')
+    elif ~pot:  
+        if level <= 250: # set min/maxs of colormap according to pressure level
+            vmax = -25; vmin = -85
+        elif level <= 350:
+            vmax = -15; vmin = -75
+        elif level <= 400:
+            vmax = -5; vmin = -65
+        elif level <= 500:
+            vmax = 10; vmin = -50
+        elif level <= 700:
+            vmax = 25; vmin = -35
+        elif level <= 800:
+            vmax = 30; vmin = -30
+        elif level <= 850:
+            vmax = 35; vmin = -25
+        elif level <= 925:
+            vmax = 40; vmin = -20
+        else:
+            vmax = 45; vmin = -15
+        mesh_t = ds.sel(level=level, time=time).t_c.plot.contourf(ax= ax, levels=np.arange(vmin,  vmax, 5), 
                                                      cmap=cmap_temp, vmin=vmin, vmax=vmax,
                                                      add_colorbar = False)
+        plt.colorbar(mesh_t, ax=ax, label='temperature [°C]')
     ax.set_title(f"level = {level}, time = {str(time).split(':')[0]}")
-    plt.colorbar(mesh_t, ax=ax, label='temperature [°C]')
+    
     
     fig.savefig(path, dpi=dpi)
     plt.close()
@@ -181,16 +194,18 @@ def fmt(x):
     
 
 # Load ERA5 data from NetCDF file
-ds = xr.open_dataset(r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_may_v3.nc')
+ds = xr.open_dataset(r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_may_v4.nc')
 ds = ds.assign(t_c = ds["t"] - 273.15) # temp in °C
+ds = ds.assign(t_pot = ds["t"] * (1000 / ds.level) ** (2 / 7))
 
 dpi = 100 # quality of saved png pics
 # extract time and level dimensions from dataset
 levels = ds.level.values[::2]
-times = ds.time.values
+times = ds.time.values[0:2]
 
 cmap_temp = plt.get_cmap('RdBu_r', 14)
 cmap_cloud = plt.get_cmap('Blues', 6)
+variables = ["temp", "pot_temp", "hum", "cc"]
 
 # loop over timestamps: one folder for each timestamp
 for time in times:
@@ -203,22 +218,17 @@ for time in times:
         os.mkdir(f"../era5horiz/{time_str}/")
     current_dir = f"../era5horiz/{time_str}/"  
          
-    # plot each level extra
-    for level in levels:
-        path_temp = current_dir + f'{time_str}_{level}_horiz_temp.png'
-        # if files already exist, don't create new ones
-        if os.path.exists(path_temp): 
-            continue
-        plot_horizontal_temp(level, time, path_temp)
-        
-    for level in levels:
-        path_hum = current_dir + f'{time_str}_{level}_horiz_hum.png'
-        if os.path.exists(path_hum):
-            continue
-        plot_horizontal_hum(level, time, path_hum)
-        
-    for level in levels:
-        path_cc = current_dir + f'{time_str}_{level}_horiz_cc.png'
-        if os.path.exists(path_cc):
-            continue
-        plot_horizontal_cc(level, time, path_cc)
+    for var in variables:
+        for level in levels:
+            path_temp = current_dir + f'{time_str}_{level}_horiz_{var}.png'
+            #if os.path.exists(path_temp): 
+               # continue
+            
+            if var == "temp":
+                plot_horizontal_temp(level, time, path_temp, pot = False)
+            elif var == "pot_temp":
+                plot_horizontal_temp(level, time, path_temp, pot = True)
+            elif var == "hum":
+                plot_horizontal_hum(level, time, path_temp)
+            elif var == "cc":
+                plot_horizontal_cc(level, time, path_temp)
