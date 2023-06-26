@@ -13,6 +13,21 @@ import pandas as pd
 
 
 def plot_vert_w_e_temp_lines(latitude, time, pot):
+    """
+     creates a figure and axis and plots temperature contour lines on it
+
+     Parameters
+     ----------
+     longitude : longitude of dataset
+     time : current timestamp (dimension value of dataset)
+     pot : bool for using potential temperature
+
+     Returns
+     -------
+     fig : current figure handle
+     ax : current axis handle
+
+     """
     fig, ax = plt.subplots(figsize=(8, 7))
     if pot == True:
         ds.sel(latitude=latitude, time=time).t_pot.plot.contour(ax=ax, levels=contour_lvls, colors='k')
@@ -21,11 +36,26 @@ def plot_vert_w_e_temp_lines(latitude, time, pot):
     return fig, ax
 
 def plot_vertical_w_e_temp(latitude, time, path, pot):
+    """
+    plots the vertical east west temperature cut and the corresponding wind barbs
+
+    Parameters
+    ----------
+    latitude : longitude of dataset
+    time : current timestamp (dimension value of dataset)
+    path : path to current file incl. corresponding filename
+    pot : bool for using potential temperature
+
+    Returns
+    -------
+    None
+
+    """
     fig, ax = plot_vert_w_e_temp_lines(latitude, time, pot)
     if pot == True:
-        ds.sel(latitude=latitude, time=time).t_pot.plot.contourf(ax=ax, levels=contour_lvls, cmap='coolwarm')
+        ds.sel(latitude=latitude, time=time).t_pot.plot.contourf(ax=ax, levels=contour_lvls, cmap='coolwarm', vmin=vmin_pot, vmax=vmax_pot)
     if pot == False:
-        ds.sel(latitude=latitude, time=time).t_c.plot.contourf(ax=ax, levels=contour_lvls, cmap='coolwarm')
+        ds.sel(latitude=latitude, time=time).t_c.plot.contourf(ax=ax, levels=contour_lvls, cmap='coolwarm', vmin=vmin_c, vmax=vmax_c)
 
     lon = ds.sel(latitude=latitude, time=time).longitude
     lvl = ds.sel(latitude=latitude, time=time).level
@@ -63,6 +93,20 @@ def plot_vertical_w_e_temp(latitude, time, path, pot):
     # plt.show()
 
 def plot_vertical_w_e_hum(latitude, time, path):
+    """
+    plots the vertical east west temperature contour lines and relative humidity
+
+    Parameters
+    ----------
+    latitude : longitude of dataset
+    time : current timestamp (dimension value of dataset)
+    path : path to current file incl. corresponding filename
+
+    Returns
+    -------
+    None
+
+    """
     fig, ax = plot_vert_w_e_temp_lines(latitude, time, False)
     # Apply the masks to the data variable
     masked_data = xr.where(ds['r'] > 90, 2, xr.where(ds['r'] > 75, 1, np.nan))
@@ -85,6 +129,20 @@ def plot_vertical_w_e_hum(latitude, time, path):
     #plt.show()
 
 def plot_vertical_w_e_cc(lon, time, path):
+    """
+    plots the vertical east west temperature contour lines and cloud cover
+
+    Parameters
+    ----------
+    latitude : longitude of dataset
+    time : current timestamp (dimension value of dataset)
+    path : path to current file incl. corresponding filename
+
+    Returns
+    -------
+    None
+
+    """
     fig, ax = plot_vert_w_e_temp_lines(lon, time, False)
     mesh_cc = ds.sel(latitude=lat, time=time).cc.plot.contourf(ax=ax, cmap=cmap_cloud,
                                                                 add_colorbar=False)
@@ -108,6 +166,11 @@ dpi = 100 # quality of saved png pics
 lats = ds.latitude.values[::8]
 times = ds.time.values
 contour_lvls = 10
+vmin_c = np.min(ds.t_c.values)
+vmax_c = np.max(ds.t_c.values)
+vmin_pot = np.min(ds.t_pot.values)
+vmax_pot = np.max(ds.t_pot.values)
+
 
 cmap_cloud = plt.get_cmap('Blues', 6)
 

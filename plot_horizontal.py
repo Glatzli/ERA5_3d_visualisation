@@ -79,6 +79,7 @@ def plot_horizontal_temp(level, time, path, pot):
     level : height level [hpa]
     time : current timestamp (dimension value of dataset)
     path : path to current file incl. corresponding filename
+    pot : bool for using potential temperature
 
     Returns
     -------
