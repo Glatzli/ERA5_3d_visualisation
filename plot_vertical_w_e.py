@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
+from matplotlib.ticker import ScalarFormatter
 
 
 def plot_vert_w_e_temp_lines(latitude, time, pot):
@@ -30,9 +31,11 @@ def plot_vert_w_e_temp_lines(latitude, time, pot):
      """
     fig, ax = plt.subplots(figsize=(8, 7))
     if pot == True:
-        ds.sel(latitude=latitude, time=time).t_pot.plot.contour(ax=ax, levels=contour_lvls, colors='k')
+        ds.sel(latitude=latitude, time=time).t_pot.plot.contour(ax=ax, levels=contour_lvls, 
+                                                                linewidths=0.7, colors='k')
     if pot == False:
-        ds.sel(latitude=latitude, time=time).t_c.plot.contour(ax=ax, levels=contour_lvls, colors='k')
+        ds.sel(latitude=latitude, time=time).t_c.plot.contour(ax=ax, levels=contour_lvls, 
+                                                              linewidths=0.7, colors='k')
     return fig, ax
 
 def plot_vertical_w_e_temp(latitude, time, path, pot):
@@ -53,9 +56,11 @@ def plot_vertical_w_e_temp(latitude, time, path, pot):
     """
     fig, ax = plot_vert_w_e_temp_lines(latitude, time, pot)
     if pot == True:
-        ds.sel(latitude=latitude, time=time).t_pot.plot.contourf(ax=ax, levels=contour_lvls, cmap='coolwarm', vmin=vmin_pot, vmax=vmax_pot)
+        ds.sel(latitude=latitude, time=time).t_pot.plot.contourf(ax=ax, levels=contour_lvls, 
+                                                                 cmap=cmap_temp, vmin=vmin_pot, vmax=vmax_pot)
     if pot == False:
-        ds.sel(latitude=latitude, time=time).t_c.plot.contourf(ax=ax, levels=contour_lvls, cmap='coolwarm', vmin=vmin_c, vmax=vmax_c)
+        ds.sel(latitude=latitude, time=time).t_c.plot.contourf(ax=ax, levels=contour_lvls, 
+                                                               cmap=cmap_temp, vmin=vmin_c, vmax=vmax_c)
 
     lon = ds.sel(latitude=latitude, time=time).longitude
     lvl = ds.sel(latitude=latitude, time=time).level
@@ -88,6 +93,8 @@ def plot_vertical_w_e_temp(latitude, time, path, pot):
 
     ax.invert_yaxis()
     plt.yscale('log')
+    ax.set_yticks([1000, 800, 600, 400, 300, 200])
+    ax.yaxis.set_major_formatter(ScalarFormatter())
     fig.savefig(path, dpi=dpi)
     plt.close()
     # plt.show()
@@ -124,6 +131,8 @@ def plot_vertical_w_e_hum(latitude, time, path):
     ax.invert_yaxis()
 
     plt.yscale('log')
+    ax.set_yticks([1000, 800, 600, 400, 300, 200])
+    ax.yaxis.set_major_formatter(ScalarFormatter())
     fig.savefig(path, dpi=dpi)
     plt.close()
     #plt.show()
@@ -150,9 +159,14 @@ def plot_vertical_w_e_cc(lon, time, path):
     ax.set_title(f"lon = {lon}, time = {str(time).split(':')[0]}")
     ax.invert_yaxis()
     plt.yscale('log')
+    ax.set_yticks([1000, 800, 600, 400, 300, 200])
+    ax.yaxis.set_major_formatter(ScalarFormatter())
     fig.savefig(path, dpi=dpi)
     plt.close()
     # plt.show()
+    
+def myround(x, base=5):
+    return base * round(x/base)
 
 
 ds = xr.open_dataset(
@@ -160,21 +174,22 @@ ds = xr.open_dataset(
 surface_p = xr.open_dataset(
     r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\surface_p.nc')
 ds = ds.assign(t_c = ds["t"] - 273.15)
-ds = ds.assign(t_pot = ds["t"] * (1013 / ds.level) ** (2 / 7))
+ds = ds.assign(t_pot = ds["t"] * (1000 / ds.level) ** (2 / 7))
 
 dpi = 100 # quality of saved png pics
 lats = ds.latitude.values[::8]
 times = ds.time.values
 contour_lvls = 10
-vmin_c = np.min(ds.t_c.values)
-vmax_c = np.max(ds.t_c.values)
-vmin_pot = np.min(ds.t_pot.values)
-vmax_pot = np.max(ds.t_pot.values)
+vmin_c = myround(np.min(ds.t_c.values))
+vmax_c = myround(np.max(ds.t_c.values))
+vmin_pot = myround(np.min(ds.t_pot.values))
+vmax_pot = myround(np.max(ds.t_pot.values))
 
 
 cmap_cloud = plt.get_cmap('Blues', 6)
+cmap_temp = plt.get_cmap('RdBu_r', 14)
 
-#variables = ["temp", "pot_temp", "hum", "cc"]
+variables = ["temp", "pot_temp", "hum", "cc"]
 
 for time in times:
     time_str = pd.Timestamp(time).strftime("%Y%m%d_%H") # convert time to str for saving
@@ -184,30 +199,16 @@ for time in times:
         os.mkdir(f"../era5vert_w_e/{time_str}/")
 
     current_dir = f"../era5vert_w_e/{time_str}/"
-
-    for lat in lats:
-        path_temp = current_dir + f'{time_str}_{lat}_vert_w_e_temp.png'
-        if os.path.exists(path_temp):
-            continue
-        plot_vertical_w_e_temp(lat, time, path_temp, pot = False)
-
-    for lat in lats:
-        path_temp = current_dir + f'{time_str}_{lat}_vert_w_e_pot_temp.png'
-        if os.path.exists(path_temp):
-            continue
-        plot_vertical_w_e_temp(lat, time, path_temp, pot = True)
-
-    for lat in lats:
-        path_hum = current_dir + f'{time_str}_{lat}_vert_w_e_hum.png'
-        if os.path.exists(path_hum):
-            continue
-
-        plot_vertical_w_e_hum(lat, time, path_hum)
-
-    for lat in lats:
-        path_cc = current_dir + f'{time_str}_{lat}_vert_n_s_cc.png'
-        if os.path.exists(path_cc):
-            continue
-
-        plot_vertical_w_e_cc(lat, time, path_cc)
-
+    
+    for var in variables:
+        for lat in lats:
+            path_temp = current_dir + f'{time_str}_{lat}_vert_w_e_{var}.png'
+            
+            if var == "temp":
+                plot_vertical_w_e_temp(lat, time, path_temp, pot = False)
+            elif var == "pot_temp":
+                plot_vertical_w_e_temp(lat, time, path_temp, pot = True)
+            elif var == "hum":
+                plot_vertical_w_e_hum(lat, time, path_temp)
+            elif var == "cc":
+                plot_vertical_w_e_cc(lat, time, path_temp)

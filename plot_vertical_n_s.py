@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
+from matplotlib.ticker import ScalarFormatter
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
@@ -32,9 +33,11 @@ def plot_vert_n_s_temp_lines(longitude, time, pot):
     """
     fig, ax = plt.subplots(figsize=(8, 7))
     if pot == True:
-        ds.sel(longitude=longitude, time=time).t_pot.plot.contour(ax=ax, levels=contour_lvls, colors='k')
+        ds.sel(longitude=longitude, time=time).t_pot.plot.contour(ax=ax, levels=contour_lvls,
+                                                                  linewidths=0.7, colors='k')
     if pot == False:
-        ds.sel(longitude=longitude, time=time).t_c.plot.contour(ax=ax, levels=contour_lvls, colors='k')
+        ds.sel(longitude=longitude, time=time).t_c.plot.contour(ax=ax, levels=contour_lvls,
+                                                                linewidths=0.7, colors='k')
     return fig, ax
 
 def plot_vertical_n_s_temp(longitude, time, path, pot):
@@ -55,14 +58,14 @@ def plot_vertical_n_s_temp(longitude, time, path, pot):
     """
     fig, ax = plot_vert_n_s_temp_lines(lon, time, pot)
     if pot:
-        vmin = -28
-        vmax = 92
+
         ds.sel(longitude=longitude, time=time).t_pot.plot.contourf(ax=ax, levels=contour_lvls,
-                                                                   vmin = vmin, 
-                                                                   vmax = vmax, 
+                                                                   vmin = vmin_pot, 
+                                                                   vmax = vmax_pot, 
                                                                    cmap=cmap_temp)
     elif ~pot:
         ds.sel(longitude=longitude, time=time).t_c.plot.contourf(ax=ax, levels=contour_lvls, 
+                                                                 vmin = vmin_c, vmax = vmax_c,
                                                                  cmap=cmap_temp)
 
     lat = ds.sel(longitude=longitude, time=time).latitude
@@ -96,6 +99,8 @@ def plot_vertical_n_s_temp(longitude, time, path, pot):
 
     ax.invert_yaxis()
     plt.yscale('log')
+    ax.set_yticks([1000, 800, 600, 400, 300, 200])
+    ax.yaxis.set_major_formatter(ScalarFormatter())
     fig.savefig(path, dpi=dpi)
     plt.close()
     #plt.show()
@@ -133,6 +138,8 @@ def plot_vertical_n_s_hum(longitude, time, path):
     ax.set_title(f"lon = {longitude}, time = {str(time).split(':')[0]}")
 
     plt.yscale('log')
+    ax.set_yticks([1000, 800, 600, 400, 300, 200])
+    ax.yaxis.set_major_formatter(ScalarFormatter())
     fig.savefig(path, dpi=dpi)
     plt.close()
     #plt.show()
@@ -161,10 +168,15 @@ def plot_vertical_n_s_cc(lon, time, path):
     ax.set_title(f"lon = {lon}, time = {str(time).split(':')[0]}")
     ax.invert_yaxis()
     plt.yscale('log')
+    ax.set_yticks([1000, 800, 600, 400, 300, 200])
+    ax.yaxis.set_major_formatter(ScalarFormatter())
     fig.savefig(path, dpi=dpi)
     plt.close()
     #plt.show()
     return
+
+def myround(x, base=5):
+    return base * round(x/base)
 
 # Load ERA5 data from NetCDF file
 ds = xr.open_dataset(
@@ -176,15 +188,15 @@ ds = ds.assign(t_pot = ds["t"] * (1000 / ds.level) ** (2 / 7))
 
 dpi = 100 # quality of saved png pics
 lons = ds.longitude.values[::8]
-times = ds.time.values[:3]
-contour_lvls = 10
-vmin_c = np.min(ds.t_c.values)
-vmax_c = np.max(ds.t_c.values)
-vmin_pot = np.min(ds.t_pot.values)
-vmax_pot = np.max(ds.t_pot.values)
+times = ds.time.values
+contour_lvls = 10 # for temp
+vmin_c = myround(np.min(ds.t_c.values))
+vmax_c = myround(np.max(ds.t_c.values))
+vmin_pot = myround(np.min(ds.t_pot.values))
+vmax_pot = myround(np.max(ds.t_pot.values))
 
 cmap_cloud = plt.get_cmap('Blues', 6)
-cmap_temp = plt.get_cmap('RdBu_r', 14)
+cmap_temp = plt.get_cmap('RdBu_r', contour_lvls)
 variables = ["temp", "pot_temp", "hum", "cc"]
 
 
