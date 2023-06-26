@@ -156,11 +156,11 @@ def plot_vertical_w_e_cc(lon, time, path):
 
 
 ds = xr.open_dataset(
-    r'C:\Users\Timm\PycharmProjects\SciProg\era5-3d-visualisation\era5_data_may_v3.nc')
+    r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_may_v4.nc')
 surface_p = xr.open_dataset(
-    r'C:\Users\Timm\PycharmProjects\SciProg\era5-3d-visualisation\surface_p.nc')
+    r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\surface_p.nc')
 ds = ds.assign(t_c = ds["t"] - 273.15)
-ds = ds.assign(t_pot = ds["t"] * (1000 / ds.level) ** (2 / 7))
+ds = ds.assign(t_pot = ds["t"] * (1013 / ds.level) ** (2 / 7))
 
 dpi = 100 # quality of saved png pics
 lats = ds.latitude.values[::8]
@@ -173,6 +173,8 @@ vmax_pot = np.max(ds.t_pot.values)
 
 
 cmap_cloud = plt.get_cmap('Blues', 6)
+
+#variables = ["temp", "pot_temp", "hum", "cc"]
 
 for time in times:
     time_str = pd.Timestamp(time).strftime("%Y%m%d_%H") # convert time to str for saving
