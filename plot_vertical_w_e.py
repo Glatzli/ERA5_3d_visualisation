@@ -123,6 +123,12 @@ def plot_vertical_w_e_hum(latitude, time, path):
                                                                  colors=['#7EDF7F', '#249527'],
                                                                  add_colorbar=False,
                                                                  ax=ax)
+
+    sp = surface_p.sel(latitude=latitude, time=time)
+    sp = sp / 100
+    sp = sp.where(sp['sp'] < 1000, 1000)
+    ax.fill_between(sp.longitude, sp.sp, 1000, color='grey')
+
     cbar = plt.colorbar(mesh, ax=ax, shrink=0.5, label='relative Humidity [%]')
     cbar.set_ticks([0.5, 1.5])
     cbar.set_ticklabels(['> 75', '> 90'])
@@ -137,7 +143,7 @@ def plot_vertical_w_e_hum(latitude, time, path):
     plt.close()
     #plt.show()
 
-def plot_vertical_w_e_cc(lon, time, path):
+def plot_vertical_w_e_cc(latitude, time, path):
     """
     plots the vertical east west temperature contour lines and cloud cover
 
@@ -152,11 +158,17 @@ def plot_vertical_w_e_cc(lon, time, path):
     None
 
     """
-    fig, ax = plot_vert_w_e_temp_lines(lon, time, False)
-    mesh_cc = ds.sel(latitude=lat, time=time).cc.plot.contourf(ax=ax, cmap=cmap_cloud,
+    fig, ax = plot_vert_w_e_temp_lines(latitude, time, False)
+    mesh_cc = ds.sel(latitude=latitude, time=time).cc.plot.contourf(ax=ax, cmap=cmap_cloud,
                                                                 add_colorbar=False)
+
+    sp = surface_p.sel(latitude=latitude, time=time)
+    sp = sp / 100
+    sp = sp.where(sp['sp'] < 1000, 1000)
+    ax.fill_between(sp.longitude, sp.sp, 1000, color='grey')
+
     plt.colorbar(mesh_cc, ax=ax, label='cloud cover fraction [0-1]')
-    ax.set_title(f"lon = {lon}, time = {str(time).split(':')[0]}")
+    ax.set_title(f"lat = {latitude}, time = {str(time).split(':')[0]}")
     ax.invert_yaxis()
     plt.yscale('log')
     ax.set_yticks([1000, 800, 600, 400, 300, 200])
@@ -170,9 +182,9 @@ def myround(x, base=5):
 
 
 ds = xr.open_dataset(
-    r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_may_v4.nc')
+    r'C:\Users\Timm\PycharmProjects\ERA5_3d_visualisation\era5_data_may_v3.nc')
 surface_p = xr.open_dataset(
-    r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\surface_p.nc')
+    r'C:\Users\Timm\PycharmProjects\ERA5_3d_visualisation\surface_p.nc')
 ds = ds.assign(t_c = ds["t"] - 273.15)
 ds = ds.assign(t_pot = ds["t"] * (1000 / ds.level) ** (2 / 7))
 
