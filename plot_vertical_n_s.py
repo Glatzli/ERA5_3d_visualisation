@@ -132,6 +132,12 @@ def plot_vertical_n_s_hum(longitude, time, path):
                                                                  colors=['#7EDF7F', '#249527'],
                                                                  add_colorbar=False,
                                                                  ax=ax)
+
+    sp = surface_p.sel(longitude=longitude, time=time)
+    sp = sp / 100
+    sp = sp.where(sp['sp'] < 1000, 1000)
+    ax.fill_between(sp.latitude, sp.sp, 1000, color='grey')
+
     cbar = plt.colorbar(mesh, ax=ax, shrink=0.5, label='relative Humidity [%]')
     cbar.set_ticks([0.5, 1.5])
     cbar.set_ticklabels(['> 75', '> 90'])
@@ -145,7 +151,7 @@ def plot_vertical_n_s_hum(longitude, time, path):
     #plt.show()
     return
 
-def plot_vertical_n_s_cc(lon, time, path):
+def plot_vertical_n_s_cc(longitude, time, path):
     """
     plots the vertical north south temperature contour lines and cloud cover
 
@@ -161,9 +167,15 @@ def plot_vertical_n_s_cc(lon, time, path):
     None
 
     """
-    fig, ax = plot_vert_n_s_temp_lines(lon, time, False)
-    mesh_cc = ds.sel(longitude=lon, time=time).cc.plot.contourf(ax= ax, cmap=cmap_cloud,
+    fig, ax = plot_vert_n_s_temp_lines(longitude, time, False)
+    mesh_cc = ds.sel(longitude=longitude, time=time).cc.plot.contourf(ax= ax, cmap=cmap_cloud,
                                                        add_colorbar = False)
+
+    sp = surface_p.sel(longitude=longitude, time=time)
+    sp = sp / 100
+    sp = sp.where(sp['sp'] < 1000, 1000)
+    ax.fill_between(sp.latitude, sp.sp, 1000, color='grey')
+
     plt.colorbar(mesh_cc, ax=ax, label='cloud cover fraction [0-1]')
     ax.set_title(f"lon = {lon}, time = {str(time).split(':')[0]}")
     ax.invert_yaxis()
@@ -180,9 +192,9 @@ def myround(x, base=5):
 
 # Load ERA5 data from NetCDF file
 ds = xr.open_dataset(
-    r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_may_v4.nc')
+    r'C:\Users\Timm\PycharmProjects\ERA5_3d_visualisation\era5_data_may_v3.nc')
 surface_p = xr.open_dataset(
-    r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\surface_p.nc')
+    r'C:\Users\Timm\PycharmProjects\ERA5_3d_visualisation\surface_p.nc')
 ds = ds.assign(t_c = ds["t"] - 273.15)
 ds = ds.assign(t_pot = ds["t"] * (1000 / ds.level) ** (2 / 7))
 
