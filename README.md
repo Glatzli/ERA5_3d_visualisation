@@ -10,15 +10,14 @@ This tool creates a webpage with 3 plots of the ECMWF ERA5 Data:
 -  vertical north-south cut 
 
 The following pictures are during a coldfront approach from May 2023:
-![Alt text](/screenshots/Screenshot 2023-08-15 at 17-50-30 Panel Application.png?raw=true "advancing cold front to austria 09.05. 06:00")
-![Alt text](/screenshots/Screenshot 2023-08-15 at 17-50-35 Panel Application.png?raw=true "humidity chart 09.05. 06:00")
-![Alt text](/screenshots/Screenshot 2023-08-15 at 17-50-40 Panel Application.png?raw=true "cloud cover chart 09.05. 06:00")
-![Alt text](/screenshots/Screenshot 2023-08-15 at 17-50-57 Panel Application.png?raw=true "pot temp&geopotential 10.05. 00:00")
-![Alt text](/screenshots/Screenshot 2023-08-15 at 17-51-02 Panel Application.png?raw=true "humidity chart 09.05. 06:00")
-![Alt text](/screenshots/Screenshot 2023-08-15 at 17-51-05 Panel Application.png?raw=true "cloud cover chart 09.05. 06:00")
-![Alt text](/screenshots/Screenshot 2023-08-15 at 17-51-47 Panel Application.png?raw=true "pot temp&geopotential 10.05. 00:00")
-![Alt text](/screenshots/Screenshot 2023-08-15 at 17-51-51 Panel Application.png?raw=true "humidity chart 09.05. 06:00")
-![Alt text](/screenshots/Screenshot 2023-08-15 at 17-51-54 Panel Application.png?raw=true "cloud cover chart 09.05. 06:00")
+![Alt text](/screenshots/temp2.png?raw=true "advancing cold front to austria 09.05. 06:00")
+![Alt text](/screenshots/hum2.png?raw=true "humidity chart 09.05. 06:00")
+![Alt text](/screenshots/cloud2.png?raw=true "cloud cover chart 09.05. 06:00")
+![Alt text](/screenshots/temp3.png?raw=true "pot temp&geopotential 10.05. 00:00")
+![Alt text](/screenshots/hum3.png?raw=true "humidity chart 09.05. 06:00")
+![Alt text](/screenshots/temp4.png?raw=true "pot temp&geopotential 10.05. 00:00")
+![Alt text](/screenshots/hum4.png?raw=true "humidity chart 09.05. 06:00")
+![Alt text](/screenshots/cloud4.png?raw=true "cloud cover chart 09.05. 06:00")
 
 
 We included plots of potential temperature & geopotential with the corresponding wind vectors 
