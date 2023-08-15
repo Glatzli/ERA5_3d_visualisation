@@ -7,9 +7,11 @@ of the processes in the atmosphere.
 This tool creates a webpage with 3 plots of the ECMWF ERA5 Data: 
 -  horizontal view
 -  vertical west-east cut
--  vertical north-south cut 
+-  vertical north-south cut
 
-The following pictures are during a coldfront approach from May 2023:
+The user of the webpage can change the latitude/longitude where the cutlines should be via sliders.
+The following screenshots of the webpage are with data during a coldfront approach and Low formation 
+south of Austria from May 2023:
 ![Alt text](/screenshots/temp2.png?raw=true "advancing cold front to austria 09.05. 06:00")
 ![Alt text](/screenshots/hum2.png?raw=true "humidity chart 09.05. 06:00")
 ![Alt text](/screenshots/cloud2.png?raw=true "cloud cover chart 09.05. 06:00")
