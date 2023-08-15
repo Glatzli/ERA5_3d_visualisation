@@ -13,9 +13,20 @@ import pandas as pd
 from matplotlib.ticker import ScalarFormatter
 
 
-def plot_vert_w_e_temp_lines(latitude, time, pot):
+def plot_format_w_e(fig, ax, latitude, time, path):
+    ax.invert_yaxis()
+    plt.yscale('log')
+    ax.set_yticks([1000, 800, 600, 400, 300, 200])
+    ax.yaxis.set_major_formatter(ScalarFormatter())
+    
+    ax.set_title(f"west-east: lat = {latitude}, time = {str(time).split(':')[0]}")
+    ax.set_ylabel("level [hpa]")
+    ax.set_xlabel("longitude [°E]")
+    fig.savefig(path, dpi=dpi)
+
+def plot_vert_w_e_geopotential(latitude, time):
     """
-     creates a figure and axis and plots temperature contour lines on it
+     creates a figure and axis and plots geopotential lines on it
 
      Parameters
      ----------
@@ -30,17 +41,16 @@ def plot_vert_w_e_temp_lines(latitude, time, pot):
 
      """
     fig, ax = plt.subplots(figsize=(8, 7))
-    if pot == True:
-        ds.sel(latitude=latitude, time=time).t_pot.plot.contour(ax=ax, levels=contour_lvls, 
-                                                                linewidths=0.7, colors='k')
-    if pot == False:
-        ds.sel(latitude=latitude, time=time).t_c.plot.contour(ax=ax, levels=contour_lvls, 
-                                                              linewidths=0.7, colors='k')
+
+    c = ds.sel(latitude=latitude, time=time).z.plot.contour(ax= ax, colors='k', linewidths=0.7,
+                                                      add_colorbar = False)
+    ax.clabel(c, c.levels, inline=True, fmt=fmt, fontsize=12)
+
     return fig, ax
 
 def plot_vertical_w_e_temp(latitude, time, path, pot):
     """
-    plots the vertical east west temperature cut and the corresponding wind barbs
+    plots the vertical west east temperature cut and the corresponding wind barbs
 
     Parameters
     ----------
@@ -54,13 +64,17 @@ def plot_vertical_w_e_temp(latitude, time, path, pot):
     None
 
     """
-    fig, ax = plot_vert_w_e_temp_lines(latitude, time, pot)
+    fig, ax = plot_vert_w_e_geopotential(latitude, time)
     if pot == True:
-        ds.sel(latitude=latitude, time=time).t_pot.plot.contourf(ax=ax, levels=contour_lvls, 
-                                                                 cmap=cmap_temp, vmin=vmin_pot, vmax=vmax_pot)
+        mesh_t_pot = ds.sel(latitude=latitude, time=time).t_pot.plot.contourf(ax=ax, levels=contour_lvls, 
+                                                                 cmap=cmap_temp, vmin=vmin_pot, 
+                                                                 vmax=vmax_pot, add_colorbar = False)
+        plt.colorbar(mesh_t_pot, ax=ax, label='pot temperature [K]')
     if pot == False:
-        ds.sel(latitude=latitude, time=time).t_c.plot.contourf(ax=ax, levels=contour_lvls, 
-                                                               cmap=cmap_temp, vmin=vmin_c, vmax=vmax_c)
+        mesh_t = ds.sel(latitude=latitude, time=time).t_c.plot.contourf(ax=ax, levels=contour_lvls, 
+                                                               cmap=cmap_temp, vmin=vmin_c, 
+                                                               vmax=vmax_c, add_colorbar = False)
+        plt.colorbar(mesh_t, ax=ax, label='temperature [°C]')
 
     lon = ds.sel(latitude=latitude, time=time).longitude
     lvl = ds.sel(latitude=latitude, time=time).level
@@ -91,17 +105,13 @@ def plot_vertical_w_e_temp(latitude, time, path, pot):
     ax.barbs(lon[skip_lon], lvl_down, u_down[skip_lon], w_down[skip_lon], length=5)
     ax.fill_between(sp.longitude, sp.sp, 1000, color = 'grey')
 
-    ax.invert_yaxis()
-    plt.yscale('log')
-    ax.set_yticks([1000, 800, 600, 400, 300, 200])
-    ax.yaxis.set_major_formatter(ScalarFormatter())
-    fig.savefig(path, dpi=dpi)
+    plot_format_w_e(fig, ax, latitude, time, path) # add axis labels, change to log y axis & save plot
     plt.close()
     # plt.show()
 
 def plot_vertical_w_e_hum(latitude, time, path):
     """
-    plots the vertical east west temperature contour lines and relative humidity
+    plots the vertical west east temperature contour lines with relative humidity
 
     Parameters
     ----------
@@ -114,7 +124,7 @@ def plot_vertical_w_e_hum(latitude, time, path):
     None
 
     """
-    fig, ax = plot_vert_w_e_temp_lines(latitude, time, False)
+    fig, ax = plot_vert_w_e_geopotential(latitude, time)
     # Apply the masks to the data variable
     masked_data = xr.where(ds['r'] > 90, 2, xr.where(ds['r'] > 75, 1, np.nan))
 
@@ -132,16 +142,12 @@ def plot_vertical_w_e_hum(latitude, time, path):
     cbar = plt.colorbar(mesh, ax=ax, shrink=0.5, label='relative Humidity [%]')
     cbar.set_ticks([0.5, 1.5])
     cbar.set_ticklabels(['> 75', '> 90'])
-    ax.set_title(f"lat = {latitude}, time = {str(time).split(':')[0]}")
 
-    ax.invert_yaxis()
+    
 
-    plt.yscale('log')
-    ax.set_yticks([1000, 800, 600, 400, 300, 200])
-    ax.yaxis.set_major_formatter(ScalarFormatter())
-    fig.savefig(path, dpi=dpi)
+    plot_format_w_e(fig, ax, latitude, time, path)
     plt.close()
-    #plt.show()
+    # plt.show()
 
 def plot_vertical_w_e_cc(latitude, time, path):
     """
@@ -158,7 +164,7 @@ def plot_vertical_w_e_cc(latitude, time, path):
     None
 
     """
-    fig, ax = plot_vert_w_e_temp_lines(latitude, time, False)
+    fig, ax = plot_vert_w_e_geopotential(latitude, time)
     mesh_cc = ds.sel(latitude=latitude, time=time).cc.plot.contourf(ax=ax, cmap=cmap_cloud,
                                                                 add_colorbar=False)
 
@@ -168,38 +174,48 @@ def plot_vertical_w_e_cc(latitude, time, path):
     ax.fill_between(sp.longitude, sp.sp, 1000, color='grey')
 
     plt.colorbar(mesh_cc, ax=ax, label='cloud cover fraction [0-1]')
-    ax.set_title(f"lat = {latitude}, time = {str(time).split(':')[0]}")
-    ax.invert_yaxis()
-    plt.yscale('log')
-    ax.set_yticks([1000, 800, 600, 400, 300, 200])
-    ax.yaxis.set_major_formatter(ScalarFormatter())
-    fig.savefig(path, dpi=dpi)
+    
+    plot_format_w_e(fig, ax, latitude, time, path)
     plt.close()
     # plt.show()
+    
+def fmt(x):
+    """
+    formats the labels of geopotential height to 10m
+
+    Parameters
+    ----------
+    x : geopotential height [dm] as float
+
+    Returns
+    -------
+    s : geopotential height [10m] as str w/o trailing zeros
+
+    """
+    x = x / 100
+    s = f"{x:.0f}"
+    return s
     
 def myround(x, base=5):
     return base * round(x/base)
 
 
-ds = xr.open_dataset(
-    r'C:\Users\Timm\PycharmProjects\ERA5_3d_visualisation\era5_data_may_v3.nc')
-surface_p = xr.open_dataset(
-    r'C:\Users\Timm\PycharmProjects\ERA5_3d_visualisation\surface_p.nc')
+ds = xr.open_dataset(r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_may_v4.nc')
+surface_p = xr.open_dataset(r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\surface_p.nc')
 ds = ds.assign(t_c = ds["t"] - 273.15)
 ds = ds.assign(t_pot = ds["t"] * (1000 / ds.level) ** (2 / 7))
 
-dpi = 100 # quality of saved png pics
+dpi = 200 # quality of saved png pics
 lats = ds.latitude.values[::8]
 times = ds.time.values
 contour_lvls = 10
-vmin_c = myround(np.min(ds.t_c.values))
+vmin_c = myround(np.min(ds.t_c.values)) # min temp [°C] for colormap
 vmax_c = myround(np.max(ds.t_c.values))
 vmin_pot = myround(np.min(ds.t_pot.values))
 vmax_pot = myround(np.max(ds.t_pot.values))
 
-
 cmap_cloud = plt.get_cmap('Blues', 6)
-cmap_temp = plt.get_cmap('RdBu_r', 14)
+cmap_temp = plt.get_cmap('coolwarm', contour_lvls)
 
 variables = ["temp", "pot_temp", "hum", "cc"]
 
@@ -216,6 +232,8 @@ for time in times:
         for lat in lats:
             path_temp = current_dir + f'{time_str}_{lat}_vert_w_e_{var}.png'
             
+            if os.path.exists(path_temp):
+                continue
             if var == "temp":
                 plot_vertical_w_e_temp(lat, time, path_temp, pot = False)
             elif var == "pot_temp":

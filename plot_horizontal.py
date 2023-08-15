@@ -1,6 +1,6 @@
 import xarray as xr
-import matplotlib
-#matplotlib.use('QtAgg')
+# import matplotlib
+# matplotlib.use('QtAgg')
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -18,7 +18,6 @@ def create_fig_national_boundaries():
     fig : figure handle
     ax : axis handle
     """
-    # Create a horizontal
     fig = plt.figure(figsize=(8, 7))
     ax = plt.axes(projection=ccrs.PlateCarree())
     
@@ -31,7 +30,6 @@ def create_fig_national_boundaries():
         linewidth = 0.2
     ))
     
-    # ax.set_xlabel('longitude'); ax.set_ylabel("latitude") #doesn't work!
     ax.text(-0.1, 0.5, 'latitude', va='bottom', ha='center',
             rotation='vertical', rotation_mode='anchor',
             transform=ax.transAxes)
@@ -232,9 +230,9 @@ ds = xr.open_dataset(r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren
 ds = ds.assign(t_c = ds["t"] - 273.15) # temp in °C
 ds = ds.assign(t_pot = ds["t"] * (1000 / ds.level) ** (2 / 7))
 
-dpi = 100 # quality of saved png pics
+dpi = 200 # quality of saved png pics
 # extract time and level dimensions from dataset
-levels = ds.level.values[::2]
+levels = ds.level.values
 times = ds.time.values
 
 contour_lvls = 10 # different colors & levels for temp plot
