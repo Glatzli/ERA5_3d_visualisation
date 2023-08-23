@@ -8,6 +8,8 @@ import numpy as np
 import os
 import pandas as pd
 from matplotlib.ticker import ScalarFormatter
+import metpy.calc as mpcalc
+from metpy.units import units
 
 import plotting_era5
 
@@ -18,6 +20,8 @@ def calc_temps(ds):
     """
     ds = ds.assign(t_c = ds["t"] - 273.15)
     ds = ds.assign(t_pot = ds["t"] * (1000 / ds.level) ** (2 / 7))
+    # ds = ds.assign(t_pot_metpy = mpcalc.potential_temperature(pressure=ds.p*units.p, temperature=ds.t_c))
+
     return ds
 
 

@@ -165,7 +165,7 @@ def set_ticks_hum(cbar):
     cbar.set_ticks([0.5, 1.5])
     cbar.set_ticklabels(['> 75', '> 90'])
 
-def plot_horizontal_hum(ds, level, time, path, dpi=200, colors=['#7EDF7F', '#249527']):
+def plot_horizontal_hum(ds, masked_data, *, level, time, path, dpi=200, colors=['#7EDF7F', '#249527']):
     """
     plot humidity&geopotential and save it
 
@@ -182,7 +182,7 @@ def plot_horizontal_hum(ds, level, time, path, dpi=200, colors=['#7EDF7F', '#249
     """
     fig, ax = create_fig_national_boundaries()
     fig, ax = plot_horizontal_geopotential(ds, level, time, fig, ax)    
-    masked_data = mask_hum(ds)
+    # masked_data = xr.where(ds['r'] > 90, 2, xr.where(ds['r'] > 75, 1, np.nan))
     
     # Create the contourf plot using xarray's plot function
     mesh = masked_data.sel(level=level, time=time).plot.contourf(levels=[0, 1, 2], 
@@ -194,7 +194,7 @@ def plot_horizontal_hum(ds, level, time, path, dpi=200, colors=['#7EDF7F', '#249
     create_title(ax, param="level", time=time, view="horiz")
     fig.savefig(path, dpi=dpi)
     plt.close()
-    
+
 
 def plot_horizontal_cc(ds, level, time, path, cmap_cloud, dpi=200):  
     """
@@ -267,30 +267,54 @@ def add_windbarbs(ds, latlon, time, ax, view):
     """
     R = 287.05
     if view == "vert_w_e":
-        latlon_sel = ds.sel(latitude=latlon, time=time).longitude
-        lvl = ds.sel(latitude=latlon, time=time).level
-        u = ds.sel(latitude=latlon, time=time).u
-        omega = ds.sel(latitude=latlon, time=time).w
-        rho = lvl / (R*ds.sel(latitude=latlon, time=time).t)
-        skip_latlon = dict(longitude=slice(None, None, 10))
-    elif view == "vert_n_s":
-        latlon_sel = ds.sel(longitude=latlon, time=time).latitude
-        lvl = ds.sel(longitude=latlon, time=time).level
-        v = ds.sel(longitude=latlon, time=time).v
-        omega = ds.sel(longitude=latlon, time=time).w
-        rho = lvl / (R*ds.sel(longitude=latlon, time=time).t)
-        skip_latlon = dict(latitude=slice(None, None, 10))
-    
-    w = - (omega/rho)
-    skip_up = dict(level= slice(None, 11, None))
-    skip_down = dict(level= slice(12, None, 3))
+        ds_slice_lat = ds.sel(latitude=latlon, time=time)  # select 
+        ds_slice_lat_lon_level_first = ds.sel(latitude=latlon, time=time, longitude=slice(None, None, 10), level= slice(None, 11, None))
+        ds_slice_lat_lon_level_3rd = ds.sel(latitude=latlon, time=time, longitude=slice(None, None, 10), level= slice(12, None, 3))
 
-    lvl_up = lvl[skip_up]; lvl_down = lvl[skip_down]
-    u_up = u[skip_up]; u_down = u[skip_down]
-    w_up = w[skip_up]; w_down = w[skip_down]
+        level_slice_first = dict(level= slice(None, 11, None))  # select first 11 level slices (in total 23 height levels)
+        level_slice_3rd = dict(level= slice(12, None, 3))  # from 12th level on select only every 3rd level
+        lon_slice = dict(longitude=slice(None, None, 10))  # slice every 10th longitude
+
+        ax.barbs(ds_slice_lat_lon_level_first.longitude, ds_slice_lat_lon_level_first.level, ds_slice_lat_lon_level_first.u, ds_slice_lat_lon_level_first.w, length=5)
+        ax.barbs(ds_slice_lat_lon_level_3rd.longitude, ds_slice_lat_lon_level_3rd.level, ds_slice_lat_lon_level_3rd.u, ds_slice_lat_lon_level_3rd.w, length=5)
+
+
+    elif view == "vert_n_s":
+        ds_slice_lat = ds.sel(longitude=latlon, time=time)  # select 
+        ds_slice_lat_lon_level_first = ds.sel(longitude=latlon, time=time, latitude=slice(None, None, 10), level= slice(None, 11, None))
+        ds_slice_lat_lon_level_3rd = ds.sel(longitude=latlon, time=time, latitude=slice(None, None, 10), level= slice(12, None, 3))
+
+        level_slice_first = dict(level= slice(None, 11, None))  # select first 11 level slices (in total 23 height levels)
+        level_slice_3rd = dict(level= slice(12, None, 3))  # from 12th level on select only every 3rd level
+        lat_slice = dict(latitude=slice(None, None, 10))  # slice every 10th longitude
+
+        ax.barbs(ds_slice_lat_lon_level_first.latitude, ds_slice_lat_lon_level_first.level, ds_slice_lat_lon_level_first.v, ds_slice_lat_lon_level_first.w, length=5)
+        ax.barbs(ds_slice_lat_lon_level_3rd.latitude, ds_slice_lat_lon_level_3rd.level, ds_slice_lat_lon_level_3rd.v, ds_slice_lat_lon_level_3rd.w, length=5)
     
-    ax.barbs(latlon_sel[skip_latlon], lvl_up, u_up[skip_latlon], w_up[skip_latlon], length=5)
-    ax.barbs(latlon_sel[skip_latlon], lvl_down, u_down[skip_latlon], w_down[skip_latlon], length=5)
+    """ w-e original code:
+    lon = ds.sel(latitude=latitude, time=time).longitude
+    lvl = ds.sel(latitude=latitude, time=time).level
+    u = ds.sel(latitude=latitude, time=time).u
+    omega = ds.sel(latitude=latitude, time=time).w
+
+    R = 287.05
+    rho = lvl / (R*ds.sel(latitude=latitude, time=time).t)
+    w = - (omega/rho)
+
+    skip_up = dict(level=slice(None,11,None))
+    skip_down = dict(level=slice(12, None, 3))
+
+    lvl_up = lvl[skip_up]
+    u_up = u[skip_up]
+    w_up = w[skip_up]
+
+    lvl_down = lvl[skip_down]
+    u_down = u[skip_down]
+    w_down = w[skip_down]
+
+    skip_lon = dict(longitude=slice(None, None, 10))
+    ax.barbs(lon[skip_lon], lvl_up, u_up[skip_lon], w_up[skip_lon], length=5)
+    ax.barbs(lon[skip_lon], lvl_down, u_down[skip_lon], w_down[skip_lon], length=5)"""
     
     return ax
 
@@ -515,6 +539,8 @@ def plotting_era5(ds, surface_p, dpi=200, variables=["temp", "pot_temp", "hum", 
     contour_lvls_temp, contour_lvls_cloud, lons, lats, levels, times, vmin_c, vmax_c, vmin_pot, vmax_pot, cmap_cloud, cmap_temp, colors_hum = define_params(ds)
     dpi = 200
     views = ["horiz", "vert_w_e", "vert_n_s"]
+    masked_data = xr.where(ds['r'] > 90, 2, xr.where(ds['r'] > 75, 1, np.nan))
+
     for view in views:  # loop over horizontal, vertical w-e & vertical n-s plots
         create_view_dir(view)
         
@@ -535,7 +561,7 @@ def plotting_era5(ds, surface_p, dpi=200, variables=["temp", "pot_temp", "hum", 
                                 case "pot_temp":
                                     plot_horizontal_pot_temp(ds, level, time, path_temp, vmin_pot, vmax_pot, cmap_temp, contour_lvls_temp, dpi)
                                 case "hum":
-                                    plot_horizontal_hum(ds, level, time, path_temp, colors_hum, dpi)
+                                    plot_horizontal_hum(ds, masked_data=masked_data, level=level, time=time, path=path_temp, colors=colors_hum, dpi=dpi)
                                 case "cc":
                                     plot_horizontal_cc(ds, level, time, path_temp, cmap_cloud, dpi)
                     elif view=="vert_w_e":
@@ -571,20 +597,3 @@ def plotting_era5(ds, surface_p, dpi=200, variables=["temp", "pot_temp", "hum", 
                                                         view=view, colors=colors_hum, dpi=dpi)
                                 case "cc":
                                     plot_vertical_cc(ds, surface_p=surface_p, latlon=lon, time=time, path_temp=path_temp, cmap=cmap_cloud, view=view, dpi=dpi)
-
-
-
-                       
-                            
-"""
-                        case "vert_n_s":
-                            for lon in lons:
-                                if var == "temp":
-                                    plot_vertical_n_s_temp(lon, time, path_temp, pot = False)
-                                elif var == "pot_temp":
-                                    plot_vertical_n_s_temp(lon, time, path_temp, pot = True)
-                                elif var == "hum":
-                                    plot_vertical_n_s_hum(lon, time, path_temp)
-                                elif var == "cc":
-                                    plot_vertical_n_s_cc(lon, time, path_temp)
-"""
