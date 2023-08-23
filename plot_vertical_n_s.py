@@ -220,47 +220,48 @@ def fmt(x):
 def myround(x, base=5):
     return base * round(x/base)
 
-# Load ERA5 data from NetCDF file
-ds = xr.open_dataset(r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\era5_data_may_v4.nc')
+if __name__ == '__main__':
+    # Load ERA5 data from NetCDF file
+    ds = xr.open_dataset(r'C:\Users\dgratzl\OneDrive - Austro Control GmbH\era5_data_may_v3.nc')
 
-# load model topography in Pa
-surface_p = xr.open_dataset(r'C:\Users\Surface Pro\OneDrive\Dokumente\Uni\Programmieren_test_git\surface_p.nc')
-ds = ds.assign(t_c = ds["t"] - 273.15)
-ds = ds.assign(t_pot = ds["t"] * (1000 / ds.level) ** (2 / 7))
+    # load model topography in Pa
+    surface_p = xr.open_dataset(r'C:\Users\dgratzl\OneDrive - Austro Control GmbH\ERA\surface_p.nc')
+    ds = ds.assign(t_c = ds["t"] - 273.15)
+    ds = ds.assign(t_pot = ds["t"] * (1000 / ds.level) ** (2 / 7))
 
-dpi = 200 # quality of saved png pics
-lons = ds.longitude.values[::8]
-times = ds.time.values
-contour_lvls = 10 # for temp
-vmin_c = myround(np.min(ds.t_c.values))
-vmax_c = myround(np.max(ds.t_c.values))
-vmin_pot = myround(np.min(ds.t_pot.values))
-vmax_pot = myround(np.max(ds.t_pot.values))
+    dpi = 200 # quality of saved png pics
+    lons = ds.longitude.values[::8]
+    times = ds.time.values
+    contour_lvls = 10 # for temp
+    vmin_c = myround(np.min(ds.t_c.values))
+    vmax_c = myround(np.max(ds.t_c.values))
+    vmin_pot = myround(np.min(ds.t_pot.values))
+    vmax_pot = myround(np.max(ds.t_pot.values))
 
-cmap_cloud = plt.get_cmap('Blues', 6)
-cmap_temp = plt.get_cmap('coolwarm', contour_lvls)
-variables = ["temp", "pot_temp", "hum", "cc"]
+    cmap_cloud = plt.get_cmap('Blues', 6)
+    cmap_temp = plt.get_cmap('coolwarm', contour_lvls)
+    variables = ["temp", "pot_temp", "hum", "cc"]
 
-for time in times:
-    time_str = pd.Timestamp(time).strftime("%Y%m%d_%H") # convert time to str for saving
+    for time in times:
+        time_str = pd.Timestamp(time).strftime("%Y%m%d_%H") # convert time to str for saving
 
-    if not os.path.exists("../era5vert_n_s/"):
-        os.mkdir("../era5vert_n_s/")
-    if not os.path.exists(f"../era5vert_n_s/{time_str}/"):
-        os.mkdir(f"../era5vert_n_s/{time_str}/")
-    current_dir = f"../era5vert_n_s/{time_str}/"
+        if not os.path.exists("../era5vert_n_s/"):
+            os.mkdir("../era5vert_n_s/")
+        if not os.path.exists(f"../era5vert_n_s/{time_str}/"):
+            os.mkdir(f"../era5vert_n_s/{time_str}/")
+        current_dir = f"../era5vert_n_s/{time_str}/"
 
-    for var in variables:
-        for lon in lons:
-           path_temp = current_dir + f'{time_str}_{lon}_vert_n_s_{var}.png'
-           
-           if os.path.exists(path_temp):
-               continue
-           if var == "temp":
-               plot_vertical_n_s_temp(lon, time, path_temp, pot = False)
-           elif var == "pot_temp":
-               plot_vertical_n_s_temp(lon, time, path_temp, pot = True)
-           elif var == "hum":
-               plot_vertical_n_s_hum(lon, time, path_temp)
-           elif var == "cc":
-               plot_vertical_n_s_cc(lon, time, path_temp)
+        for var in variables:
+            for lon in lons:
+                path_temp = current_dir + f'{time_str}_{lon}_vert_n_s_{var}.png'
+                
+                if os.path.exists(path_temp):
+                    continue
+                if var == "temp":
+                    plot_vertical_n_s_temp(lon, time, path_temp, pot = False)
+                elif var == "pot_temp":
+                    plot_vertical_n_s_temp(lon, time, path_temp, pot = True)
+                elif var == "hum":
+                    plot_vertical_n_s_hum(lon, time, path_temp)
+                elif var == "cc":
+                    plot_vertical_n_s_cc(lon, time, path_temp)

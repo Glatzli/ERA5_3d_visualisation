@@ -143,8 +143,6 @@ def plot_vertical_w_e_hum(latitude, time, path):
     cbar.set_ticks([0.5, 1.5])
     cbar.set_ticklabels(['> 75', '> 90'])
 
-    
-
     plot_format_w_e(fig, ax, latitude, time, path)
     plt.close()
     # plt.show()
