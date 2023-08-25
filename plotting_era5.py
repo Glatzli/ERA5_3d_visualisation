@@ -267,13 +267,13 @@ def add_windbarbs(ds, latlon, time, ax, view):
     """
     R = 287.05
     if view == "vert_w_e":
-        ds_slice_lat = ds.sel(latitude=latlon, time=time)  # select 
+        # ds_slice_lat = ds.sel(latitude=latlon, time=time)  # select 
         ds_slice_lat_lon_level_first = ds.sel(latitude=latlon, time=time, longitude=slice(None, None, 10), level= slice(None, 11, None))
         ds_slice_lat_lon_level_3rd = ds.sel(latitude=latlon, time=time, longitude=slice(None, None, 10), level= slice(12, None, 3))
 
-        level_slice_first = dict(level= slice(None, 11, None))  # select first 11 level slices (in total 23 height levels)
-        level_slice_3rd = dict(level= slice(12, None, 3))  # from 12th level on select only every 3rd level
-        lon_slice = dict(longitude=slice(None, None, 10))  # slice every 10th longitude
+        # level_slice_first = dict(level= slice(None, 11, None))  # select first 11 level slices (in total 23 height levels)
+        # level_slice_3rd = dict(level= slice(12, None, 3))  # from 12th level on select only every 3rd level
+        # lon_slice = dict(longitude=slice(None, None, 10))  # slice every 10th longitude
 
         ax.barbs(ds_slice_lat_lon_level_first.longitude, ds_slice_lat_lon_level_first.level, ds_slice_lat_lon_level_first.u, ds_slice_lat_lon_level_first.w, length=5)
         ax.barbs(ds_slice_lat_lon_level_3rd.longitude, ds_slice_lat_lon_level_3rd.level, ds_slice_lat_lon_level_3rd.u, ds_slice_lat_lon_level_3rd.w, length=5)
@@ -315,7 +315,16 @@ def add_windbarbs(ds, latlon, time, ax, view):
     skip_lon = dict(longitude=slice(None, None, 10))
     ax.barbs(lon[skip_lon], lvl_up, u_up[skip_lon], w_up[skip_lon], length=5)
     ax.barbs(lon[skip_lon], lvl_down, u_down[skip_lon], w_down[skip_lon], length=5)"""
-    
+
+    # example metpy:
+    # Plot winds using the axes interface directly, with some custom indexing to make the barbs
+    # less crowded
+    # wind_slc_vert = list(range(0, 19, 2)) + list(range(19, 29))
+    # wind_slc_horz = slice(5, 100, 5)
+    # ax.barbs(cross['lon'][wind_slc_horz], cross['isobaric'][wind_slc_vert],
+    #        cross['t_wind'][wind_slc_vert, wind_slc_horz],
+    #        cross['n_wind'][wind_slc_vert, wind_slc_horz], color='k')
+
     return ax
 
 def add_topography(surface_p, latlon, time, ax, view):

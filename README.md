@@ -33,12 +33,13 @@ site. To create the webpage we used panel, a first draft was also done in via ja
 
 All the plots are created beforehand locally, and are just displayed by the webpage.
 
-#### Note that this tool is just a first draft and definitely not fully developed!
+#### Note that this tool is just a first draft and not fully developed!
 
 
 ## Ideas for advancing:
-- change the code layout: there is one script for each plot (horizontal and each vertical) and for the webpage. Some lines
-can be saved by optimizing the code layout.
+- calculate & plot vertical wind correctly? right now it is calculated via metpy, which is assuming hydrostatic conditions on synoptic scale. This is not the case for such a small-scale visualization!
+- 
+- add equivalent pot temp plots (with metpy calc, had problem with calculation of Td, rh sometimes > 100%, or smaller than 0!)
 - optimize the webpage display: 
 - display of time in proper format (right now the plots are scrolled changed by a discreteslider
 using the name of the plots, f.e. the date is shown as the string by which the file is saved!)
@@ -47,6 +48,6 @@ using the name of the plots, f.e. the date is shown as the string by which the f
 - display the cutting-lines in the horizontal plot (probably only possible when doing the cut in realtime, 
 which makes the webpage probably really slow! good example from panel: MRI Slicer)
 - automate the data download to make the tool working with forecast data
-- everything you can think of!
+- everything else you can think of!
 
 
