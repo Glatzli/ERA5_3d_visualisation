@@ -265,21 +265,21 @@ def add_windbarbs(ds, latlon, time, ax, view):
     """
     calculates the wind in the cross section and add it to current axis, selects only the needed windbarbs which should be plotted
     """
-    R = 287.05
+    # slice in vertical: till 11th level take every single barb, above only every 3rd
+    wind_slc_vert = list(range(0, 12, 2)) + list(range(12, 24, 3)) 
+    wind_slc_horz = slice(None, None, 15)  # slice horizontally: only every 15th barb 
     if view == "vert_w_e":
-        # ds_slice_lat = ds.sel(latitude=latlon, time=time)  # select 
-        ds_slice_lat_lon_level_first = ds.sel(latitude=latlon, time=time, longitude=slice(None, None, 10), level= slice(None, 11, None))
-        ds_slice_lat_lon_level_3rd = ds.sel(latitude=latlon, time=time, longitude=slice(None, None, 10), level= slice(12, None, 3))
-
-        # level_slice_first = dict(level= slice(None, 11, None))  # select first 11 level slices (in total 23 height levels)
-        # level_slice_3rd = dict(level= slice(12, None, 3))  # from 12th level on select only every 3rd level
-        # lon_slice = dict(longitude=slice(None, None, 10))  # slice every 10th longitude
-
-        ax.barbs(ds_slice_lat_lon_level_first.longitude, ds_slice_lat_lon_level_first.level, ds_slice_lat_lon_level_first.u, ds_slice_lat_lon_level_first.w, length=5)
-        ax.barbs(ds_slice_lat_lon_level_3rd.longitude, ds_slice_lat_lon_level_3rd.level, ds_slice_lat_lon_level_3rd.u, ds_slice_lat_lon_level_3rd.w, length=5)
-
+        ds_slice_lat_time = ds.sel(latitude=latlon, time=time)  # select 
+        ax.barbs(ds_slice_lat_time.longitude[wind_slc_horz], ds_slice_lat_time.level[wind_slc_vert], 
+                 ds_slice_lat_time.u[wind_slc_vert, wind_slc_horz], 
+                 ds_slice_lat_time.w_knots[wind_slc_vert, wind_slc_horz])
 
     elif view == "vert_n_s":
+        ds_slice_lon_time = ds.sel(longitude=latlon, time=time)
+        ax.barbs(ds_slice_lon_time.latitude[wind_slc_horz], ds_slice_lon_time.level[wind_slc_vert], 
+                 ds_slice_lon_time.v[wind_slc_vert, wind_slc_horz], 
+                 ds_slice_lon_time.w_knots[wind_slc_vert, wind_slc_horz])
+        """
         ds_slice_lat = ds.sel(longitude=latlon, time=time)  # select 
         ds_slice_lat_lon_level_first = ds.sel(longitude=latlon, time=time, latitude=slice(None, None, 10), level= slice(None, 11, None))
         ds_slice_lat_lon_level_3rd = ds.sel(longitude=latlon, time=time, latitude=slice(None, None, 10), level= slice(12, None, 3))
@@ -290,7 +290,7 @@ def add_windbarbs(ds, latlon, time, ax, view):
 
         ax.barbs(ds_slice_lat_lon_level_first.latitude, ds_slice_lat_lon_level_first.level, ds_slice_lat_lon_level_first.v, ds_slice_lat_lon_level_first.w, length=5)
         ax.barbs(ds_slice_lat_lon_level_3rd.latitude, ds_slice_lat_lon_level_3rd.level, ds_slice_lat_lon_level_3rd.v, ds_slice_lat_lon_level_3rd.w, length=5)
-    
+    """
     """ w-e original code:
     lon = ds.sel(latitude=latitude, time=time).longitude
     lvl = ds.sel(latitude=latitude, time=time).level
@@ -315,15 +315,6 @@ def add_windbarbs(ds, latlon, time, ax, view):
     skip_lon = dict(longitude=slice(None, None, 10))
     ax.barbs(lon[skip_lon], lvl_up, u_up[skip_lon], w_up[skip_lon], length=5)
     ax.barbs(lon[skip_lon], lvl_down, u_down[skip_lon], w_down[skip_lon], length=5)"""
-
-    # example metpy:
-    # Plot winds using the axes interface directly, with some custom indexing to make the barbs
-    # less crowded
-    # wind_slc_vert = list(range(0, 19, 2)) + list(range(19, 29))
-    # wind_slc_horz = slice(5, 100, 5)
-    # ax.barbs(cross['lon'][wind_slc_horz], cross['isobaric'][wind_slc_vert],
-    #        cross['t_wind'][wind_slc_vert, wind_slc_horz],
-    #        cross['n_wind'][wind_slc_vert, wind_slc_horz], color='k')
 
     return ax
 
