@@ -11,6 +11,7 @@ import pandas as pd
 from matplotlib.ticker import ScalarFormatter
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+from pathlib import Path
 
 
 def fmt(x):
@@ -266,19 +267,19 @@ def add_windbarbs(ds, latlon, time, ax, view):
     calculates the wind in the cross section and add it to current axis, selects only the needed windbarbs which should be plotted
     """
     # slice in vertical: till 11th level take every single barb, above only every 3rd
-    wind_slc_vert = list(range(0, 12, 2)) + list(range(12, 24, 3)) 
+    wind_slc_vert = list(range(0, 12, 3)) + list(range(12, 24, 3)) 
     wind_slc_horz = slice(None, None, 15)  # slice horizontally: only every 15th barb 
     if view == "vert_w_e":
         ds_slice_lat_time = ds.sel(latitude=latlon, time=time)  # select 
         ax.barbs(ds_slice_lat_time.longitude[wind_slc_horz], ds_slice_lat_time.level[wind_slc_vert], 
-                 ds_slice_lat_time.u[wind_slc_vert, wind_slc_horz], 
-                 ds_slice_lat_time.w_knots[wind_slc_vert, wind_slc_horz])
+                 ds_slice_lat_time.u_kt[wind_slc_vert, wind_slc_horz], 
+                 ds_slice_lat_time.w_kt[wind_slc_vert, wind_slc_horz])
 
     elif view == "vert_n_s":
         ds_slice_lon_time = ds.sel(longitude=latlon, time=time)
         ax.barbs(ds_slice_lon_time.latitude[wind_slc_horz], ds_slice_lon_time.level[wind_slc_vert], 
-                 ds_slice_lon_time.v[wind_slc_vert, wind_slc_horz], 
-                 ds_slice_lon_time.w_knots[wind_slc_vert, wind_slc_horz])
+                 ds_slice_lon_time.v_kt[wind_slc_vert, wind_slc_horz], 
+                 ds_slice_lon_time.w_kt[wind_slc_vert, wind_slc_horz])
         """
         ds_slice_lat = ds.sel(longitude=latlon, time=time)  # select 
         ds_slice_lat_lon_level_first = ds.sel(longitude=latlon, time=time, latitude=slice(None, None, 10), level= slice(None, 11, None))
@@ -527,7 +528,6 @@ def define_params(ds):
 
     cmap_cloud = plt.get_cmap('Blues', contour_lvls_cloud); cmap_temp = plt.get_cmap('coolwarm', contour_lvls_temp)
     colors_hum = ['#7EDF7F', '#249527']
-    
 
     return contour_lvls_temp, contour_lvls_cloud, lons, lats, levels, times, vmin_c, vmax_c, vmin_pot, vmax_pot, cmap_cloud, cmap_temp, colors_hum
 
@@ -567,7 +567,7 @@ def plotting_era5(ds, surface_p, dpi=200, variables=["temp", "pot_temp", "hum", 
                     elif view=="vert_w_e":
                         for lat in lats:
                             path_temp = current_dir + f'{time_str}_{lat}_{view}_{var}.png'
-                            if os.path.exists(path_temp): continue
+                            # if os.path.exists(path_temp): continue
                             match var:
                                 case "temp":
                                     plot_vertical_temp(ds, surface_p=surface_p, latlon=lat, time=time, path_temp=path_temp, cmap=cmap_temp, 
@@ -584,7 +584,7 @@ def plotting_era5(ds, surface_p, dpi=200, variables=["temp", "pot_temp", "hum", 
                     elif view=="vert_n_s":
                         for lon in lons:
                             path_temp = current_dir + f'{time_str}_{lon}_{view}_{var}.png'
-                            if os.path.exists(path_temp): continue
+                            # if os.path.exists(path_temp): continue
                             match var:
                                 case "temp":
                                     plot_vertical_temp(ds, surface_p=surface_p, latlon=lon, time=time, path_temp=path_temp, cmap=cmap_temp, 
