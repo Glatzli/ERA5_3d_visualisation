@@ -104,6 +104,17 @@ def create_title(ax, param, time, view):
             ax.set_title(f"north-south: lon = {param}, time = {str(time).split(':')[0]}")
     
 
+def plot_horizontal_temp(ds, level, time, path, vmin, vmax, cmap, contour_lvls_temp, dpi):
+    fig, ax = create_fig_national_boundaries()
+    fig, ax = plot_horizontal_geopotential(ds, level, time, fig, ax)
+    mesh_t = ds.sel(level=level, time=time).t_c.plot.contourf(ax= ax, levels=np.arange(vmin,  vmax, contour_lvls_temp), 
+                                                    cmap=cmap, vmin=vmin, vmax=vmax,
+                                                    add_colorbar = False)
+    plt.colorbar(mesh_t, ax=ax, label='temperature [°C]')
+    create_title(ax, param="level", time=time, view="horiz")
+    fig.savefig(path, dpi=dpi)
+    plt.close()
+
 
 def plot_horizontal_pot_temp(ds, level, time, path, vmin, vmax, cmap, contour_lvls_temp = 10, dpi=200):
     """
@@ -134,14 +145,31 @@ def plot_horizontal_pot_temp(ds, level, time, path, vmin, vmax, cmap, contour_lv
     plt.close()
 
 
-def plot_horizontal_temp(ds, level, time, path, vmin, vmax, cmap, contour_lvls_temp, dpi):
+def plot_horizontal_equiv_pot_temp(ds,*, level, time, path, vmin, vmax, cmap, contour_lvls_temp = 10, dpi=200):
+    """
+    plot equivalent pot temp with geopotential and plot it
+
+    Parameters
+    ----------
+    level : height level [hpa]
+    time : current timestamp (dimension value of dataset)
+    path : path to current file incl. corresponding filename
+
+    Returns
+    -------
+    None.
+
+    """
     fig, ax = create_fig_national_boundaries()
     fig, ax = plot_horizontal_geopotential(ds, level, time, fig, ax)
-    mesh_t = ds.sel(level=level, time=time).t_c.plot.contourf(ax= ax, levels=np.arange(vmin,  vmax, contour_lvls_temp), 
-                                                    cmap=cmap, vmin=vmin, vmax=vmax,
-                                                    add_colorbar = False)
-    plt.colorbar(mesh_t, ax=ax, label='temperature [°C]')
-    create_title(ax, param="level", time=time, view="horiz")
+       
+    mesh_t = ds.sel(level=level, time=time).eqpt.plot.contourf(ax= ax, cmap=cmap, 
+                                                                levels=np.arange(vmin,  vmax, contour_lvls_temp),
+                                                                vmin = vmin, vmax = vmax,
+                                                                add_colorbar = False)
+
+    plt.colorbar(mesh_t, ax=ax, label='equivalent pot temperature [K]')
+    create_title(ax, param="level", time=time , view="horiz")
     fig.savefig(path, dpi=dpi)
     plt.close()
 
@@ -166,7 +194,7 @@ def set_ticks_hum(cbar):
     cbar.set_ticks([0.5, 1.5])
     cbar.set_ticklabels(['> 75', '> 90'])
 
-def plot_horizontal_hum(ds, masked_data, *, level, time, path, dpi=200, colors=['#7EDF7F', '#249527']):
+def plot_horizontal_hum(ds, *, masked_data, level, time, path, dpi=200, colors=['#7EDF7F', '#249527']):
     """
     plot humidity&geopotential and save it
 
@@ -184,7 +212,7 @@ def plot_horizontal_hum(ds, masked_data, *, level, time, path, dpi=200, colors=[
     fig, ax = create_fig_national_boundaries()
     fig, ax = plot_horizontal_geopotential(ds, level, time, fig, ax)    
     # masked_data = xr.where(ds['r'] > 90, 2, xr.where(ds['r'] > 75, 1, np.nan))
-    
+    # masked_data = mask_hum(ds)
     # Create the contourf plot using xarray's plot function
     mesh = masked_data.sel(level=level, time=time).plot.contourf(levels=[0, 1, 2], 
                                                                  colors=colors, 
@@ -266,57 +294,21 @@ def add_windbarbs(ds, latlon, time, ax, view):
     """
     calculates the wind in the cross section and add it to current axis, selects only the needed windbarbs which should be plotted
     """
-    # slice in vertical: till 11th level take every single barb, above only every 3rd
-    wind_slc_vert = list(range(0, 12, 3)) + list(range(12, 24, 3)) 
+    length_barbs = 6
+    # slice in vertical: till 11th level take every 3rd barb (from 200hpa on down), below only every 4th barb till ground level
+    wind_slc_vert = list(range(0, 12, 3)) + list(range(12, 24, 4)) 
     wind_slc_horz = slice(None, None, 15)  # slice horizontally: only every 15th barb 
     if view == "vert_w_e":
-        ds_slice_lat_time = ds.sel(latitude=latlon, time=time)  # select 
+        ds_slice_lat_time = ds.sel(latitude=latlon, time=time)  # 
         ax.barbs(ds_slice_lat_time.longitude[wind_slc_horz], ds_slice_lat_time.level[wind_slc_vert], 
                  ds_slice_lat_time.u_kt[wind_slc_vert, wind_slc_horz], 
-                 ds_slice_lat_time.w_kt[wind_slc_vert, wind_slc_horz])
+                 ds_slice_lat_time.w_kt[wind_slc_vert, wind_slc_horz], length=length_barbs)
 
     elif view == "vert_n_s":
         ds_slice_lon_time = ds.sel(longitude=latlon, time=time)
         ax.barbs(ds_slice_lon_time.latitude[wind_slc_horz], ds_slice_lon_time.level[wind_slc_vert], 
                  ds_slice_lon_time.v_kt[wind_slc_vert, wind_slc_horz], 
-                 ds_slice_lon_time.w_kt[wind_slc_vert, wind_slc_horz])
-        """
-        ds_slice_lat = ds.sel(longitude=latlon, time=time)  # select 
-        ds_slice_lat_lon_level_first = ds.sel(longitude=latlon, time=time, latitude=slice(None, None, 10), level= slice(None, 11, None))
-        ds_slice_lat_lon_level_3rd = ds.sel(longitude=latlon, time=time, latitude=slice(None, None, 10), level= slice(12, None, 3))
-
-        level_slice_first = dict(level= slice(None, 11, None))  # select first 11 level slices (in total 23 height levels)
-        level_slice_3rd = dict(level= slice(12, None, 3))  # from 12th level on select only every 3rd level
-        lat_slice = dict(latitude=slice(None, None, 10))  # slice every 10th longitude
-
-        ax.barbs(ds_slice_lat_lon_level_first.latitude, ds_slice_lat_lon_level_first.level, ds_slice_lat_lon_level_first.v, ds_slice_lat_lon_level_first.w, length=5)
-        ax.barbs(ds_slice_lat_lon_level_3rd.latitude, ds_slice_lat_lon_level_3rd.level, ds_slice_lat_lon_level_3rd.v, ds_slice_lat_lon_level_3rd.w, length=5)
-    """
-    """ w-e original code:
-    lon = ds.sel(latitude=latitude, time=time).longitude
-    lvl = ds.sel(latitude=latitude, time=time).level
-    u = ds.sel(latitude=latitude, time=time).u
-    omega = ds.sel(latitude=latitude, time=time).w
-
-    R = 287.05
-    rho = lvl / (R*ds.sel(latitude=latitude, time=time).t)
-    w = - (omega/rho)
-
-    skip_up = dict(level=slice(None,11,None))
-    skip_down = dict(level=slice(12, None, 3))
-
-    lvl_up = lvl[skip_up]
-    u_up = u[skip_up]
-    w_up = w[skip_up]
-
-    lvl_down = lvl[skip_down]
-    u_down = u[skip_down]
-    w_down = w[skip_down]
-
-    skip_lon = dict(longitude=slice(None, None, 10))
-    ax.barbs(lon[skip_lon], lvl_up, u_up[skip_lon], w_up[skip_lon], length=5)
-    ax.barbs(lon[skip_lon], lvl_down, u_down[skip_lon], w_down[skip_lon], length=5)"""
-
+                 ds_slice_lon_time.w_kt[wind_slc_vert, wind_slc_horz], length=length_barbs)
     return ax
 
 def add_topography(surface_p, latlon, time, ax, view):
@@ -355,7 +347,7 @@ def plot_vertical_temp(ds, *, surface_p, latlon, time, path_temp, vmin, vmax, cm
     fig, ax = plot_vert_geopotential(ds, latlon=latlon, time=time, view=view)
     match view:
         case "vert_w_e":
-            mesh_t = ds.sel(latitude=latlon, time=time).t_c.plot.contourf(ax=ax, levels=contour_lvls_temp, 
+            mesh_t = ds.sel(latitude=latlon, time=time).t_c.plot.contourf(ax=ax, levels=np.arange(vmin,  vmax, contour_lvls_temp), 
                                                                     cmap=cmap, vmin=vmin, 
                                                                     vmax=vmax, add_colorbar = False)
             ax.set_xlabel("longitude [°E]")
@@ -395,12 +387,12 @@ def plot_vertical_pot_temp(ds, *, surface_p, latlon, time, path_temp, vmin, vmax
     fig, ax = plot_vert_geopotential(ds, latlon=latlon, time=time, view=view)
     match view:
         case "vert_w_e":
-            mesh_t_pot = ds.sel(latitude=latlon, time=time).t_pot.plot.contourf(ax=ax, levels=contour_lvls_temp, 
+            mesh_t_pot = ds.sel(latitude=latlon, time=time).t_pot.plot.contourf(ax=ax, levels=np.arange(vmin,  vmax, contour_lvls_temp), 
                                                                             cmap=cmap, vmin=vmin, 
                                                                             vmax=vmax, add_colorbar = False)
             ax.set_xlabel("longitude [°E]")
         case "vert_n_s":
-            mesh_t_pot = ds.sel(longitude=latlon, time=time).t_pot.plot.contourf(ax=ax, levels=contour_lvls_temp, 
+            mesh_t_pot = ds.sel(longitude=latlon, time=time).t_pot.plot.contourf(ax=ax, levels=np.arange(vmin,  vmax, contour_lvls_temp), 
                                                                             cmap=cmap, vmin=vmin, 
                                                                             vmax=vmax, add_colorbar = False)
             ax.set_xlabel("latiude [°N]")
@@ -417,7 +409,47 @@ def plot_vertical_pot_temp(ds, *, surface_p, latlon, time, path_temp, vmin, vmax
     # plt.show()
 
 
-def plot_vertical_hum(ds, *, surface_p, latlon, time, path_temp, view, colors= ['#7EDF7F', '#249527'], dpi=200):
+def plot_vertical_equiv_pot_temp(ds, *, surface_p, latlon, time, path_temp, vmin, vmax, cmap, contour_lvls_temp, view, dpi=200):
+    """
+    plots the vertical west east equiv pot temp cut; produces some nan data...
+
+    Parameters
+    ----------
+    lat: latitude of dataset
+    time : current timestamp (dimension value of dataset)
+    path : path to current file incl. corresponding filename
+    pot : bool for using potential temperature
+
+    Returns
+    -------
+    None
+
+    """
+    fig, ax = plot_vert_geopotential(ds, latlon=latlon, time=time, view=view)
+    match view:
+        case "vert_w_e":
+            mesh_t_pot = ds.sel(latitude=latlon, time=time).eqpt.plot.contourf(ax=ax, levels=np.arange(vmin,  vmax, contour_lvls_temp), 
+                                                                            cmap=cmap, vmin=vmin, 
+                                                                            vmax=vmax, add_colorbar = False)
+            ax.set_xlabel("longitude [°E]")
+        case "vert_n_s":
+            mesh_t_pot = ds.sel(longitude=latlon, time=time).eqpt.plot.contourf(ax=ax, levels=np.arange(vmin,  vmax, contour_lvls_temp), 
+                                                                            cmap=cmap, vmin=vmin, 
+                                                                            vmax=vmax, add_colorbar = False)
+            ax.set_xlabel("latiude [°N]")
+            
+    plt.colorbar(mesh_t_pot, ax=ax, label='equivalent pot temperature [K]')
+    ax = add_topography(surface_p, latlon, time, ax, view)
+
+    format_vert_plot(ax)
+    create_title(ax, latlon, time, view)
+    
+    fig.savefig(path_temp, dpi=dpi)
+    plt.close()
+    # plt.show()
+
+
+def plot_vertical_hum(ds, *, surface_p, masked_data, latlon, time, path_temp, view, colors= ['#7EDF7F', '#249527'], dpi=200):
     """
     plots the vertical west east temperature contour lines with relative humidity
 
@@ -433,7 +465,6 @@ def plot_vertical_hum(ds, *, surface_p, latlon, time, path_temp, view, colors= [
 
     """
     fig, ax = plot_vert_geopotential(ds, latlon=latlon, time=time, view=view)
-    masked_data = mask_hum(ds)  # Apply the masks to the data variable
     match view:
         case "vert_w_e":
             mesh = masked_data.sel(latitude=latlon, time=time).plot.contourf(levels=[0, 1, 2],
@@ -510,6 +541,9 @@ def create_time_dir(view, time_str):
 
 
 def myround(x, base=5):
+    """
+    rounds x to next value with a 5 digit at the end
+    """
     return base * round(x/base)
 
 
@@ -521,25 +555,26 @@ def define_params(ds):
     lons = ds.longitude.values[::8]
     lats = lats = ds.latitude.values[::8]
     levels = ds.level.values[::4]
-    times = ds.time.values[:2]
+    times = ds.time.values[:1]
     
-    vmin_c = myround(np.min(ds.t_c.values)); vmax_c = myround(np.max(ds.t_c.values))
-    vmin_pot = myround(np.min(ds.t_pot.values)); vmax_pot = myround(np.max(ds.t_pot.values))
+    vmin_c = myround(ds.t_c.min().values); vmax_c = myround(ds.t_c.max().values)
+    vmin_pot = myround(ds.t_pot.min().values); vmax_pot = myround(ds.t_pot.max().values)
+    vmin_eqpt = myround(ds.eqpt.min().values); vmax_eqpt = myround(ds.eqpt.max().values)
 
     cmap_cloud = plt.get_cmap('Blues', contour_lvls_cloud); cmap_temp = plt.get_cmap('coolwarm', contour_lvls_temp)
     colors_hum = ['#7EDF7F', '#249527']
 
-    return contour_lvls_temp, contour_lvls_cloud, lons, lats, levels, times, vmin_c, vmax_c, vmin_pot, vmax_pot, cmap_cloud, cmap_temp, colors_hum
+    return contour_lvls_temp, contour_lvls_cloud, lons, lats, levels, times, vmin_c, vmax_c, vmin_pot, vmax_pot, vmin_eqpt, vmax_eqpt, cmap_cloud, cmap_temp, colors_hum
 
 
-def plotting_era5(ds, surface_p, dpi=200, variables=["temp", "pot_temp", "hum", "cc"]):
+def plotting_era5(ds, surface_p, dpi=200, variables=["temp", "pot_temp", "eqpt", "hum", "cc"]):
     """
     main function for plotting everything, i know for loops look messy but with vectorization it looks even worse!
     """
-    contour_lvls_temp, contour_lvls_cloud, lons, lats, levels, times, vmin_c, vmax_c, vmin_pot, vmax_pot, cmap_cloud, cmap_temp, colors_hum = define_params(ds)
+    contour_lvls_temp, contour_lvls_cloud, lons, lats, levels, times, vmin_c, vmax_c, vmin_pot, vmax_pot, vmin_eqpt, vmax_eqpt, cmap_cloud, cmap_temp, colors_hum = define_params(ds)
     dpi = 200
     views = ["horiz", "vert_w_e", "vert_n_s"]
-    masked_data = xr.where(ds['r'] > 90, 2, xr.where(ds['r'] > 75, 1, np.nan))
+    masked_data = mask_hum(ds)
 
     for view in views:  # loop over horizontal, vertical w-e & vertical n-s plots
         create_view_dir(view)
@@ -550,50 +585,59 @@ def plotting_era5(ds, surface_p, dpi=200, variables=["temp", "pot_temp", "hum", 
 
             for var in variables:  # here begin plotting specific loops
                     # create different filename for different varibles, timestamps and levels
-                    if view=="horiz":
-                        for level in levels:
-                            path_temp = current_dir + f'{time_str}_{level}_{view}_{var}.png'
-                            if os.path.exists(path_temp): continue # if file already exists, skip plotting
+                    match view:
+                        case "horiz":
+                            for level in levels:
+                                path_temp = current_dir + f'{time_str}_{level}_{view}_{var}.png'
+                                if os.path.exists(path_temp): continue # if file already exists, skip plotting
+                                match var:
+                                    case "temp":
+                                        plot_horizontal_temp(ds, level, time, path_temp, vmin_c, vmax_c, cmap_temp, contour_lvls_temp, dpi)
+                                    case "pot_temp":
+                                        plot_horizontal_pot_temp(ds, level, time, path_temp, vmin_pot, vmax_pot, cmap_temp, contour_lvls_temp, dpi)
+                                    case "eqpt":
+                                        plot_horizontal_equiv_pot_temp(ds, level=level, time=time, path=path_temp, vmin=vmin_eqpt, 
+                                                                    vmax=vmax_eqpt, cmap=cmap_temp, contour_lvls_temp=10, dpi=dpi)
+                                    case "hum":
+                                        plot_horizontal_hum(ds, masked_data=masked_data, level=level, time=time, path=path_temp, colors=colors_hum, dpi=dpi)
+                                    case "cc":
+                                        plot_horizontal_cc(ds, level, time, path_temp, cmap_cloud, dpi)
+                        case "vert_w_e":
+                            for lat in lats:
+                                path_temp = current_dir + f'{time_str}_{lat}_{view}_{var}.png'
+                                if os.path.exists(path_temp): continue
+                                match var:
+                                    case "temp":
+                                        plot_vertical_temp(ds, surface_p=surface_p, latlon=lat, time=time, path_temp=path_temp, cmap=cmap_temp, 
+                                                        vmin=vmin_c, vmax=vmax_c, contour_lvls_temp=contour_lvls_temp, view=view, dpi=dpi)
+                                    case "pot_temp":
+                                        plot_vertical_pot_temp(ds, surface_p=surface_p, latlon=lat, time=time, path_temp=path_temp,
+                                                                vmin=vmin_pot, vmax=vmax_pot, cmap=cmap_temp, contour_lvls_temp=contour_lvls_temp, view=view, dpi=dpi)
+                                    case "eqpt":
+                                        plot_vertical_equiv_pot_temp(ds, surface_p=surface_p, latlon=lat, time=time, path_temp=path_temp,
+                                                                vmin=vmin_eqpt, vmax=vmax_eqpt, cmap=cmap_temp, contour_lvls_temp=contour_lvls_temp, view=view, dpi=dpi)
+                                    case "hum":
+                                        plot_vertical_hum(ds, surface_p=surface_p, masked_data=masked_data, latlon=lat, time=time, path_temp=path_temp, 
+                                                            view=view, colors=colors_hum, dpi=dpi)
+                                    case "cc":
+                                        plot_vertical_cc(ds, surface_p=surface_p, latlon=lat, time=time, path_temp=path_temp, cmap=cmap_cloud, view=view, dpi=dpi)
 
-                            match var:
-                                case "temp":
-                                    plot_horizontal_temp(ds, level, time, path_temp, vmin_c, vmax_c, cmap_temp, contour_lvls_temp, dpi)
-                                case "pot_temp":
-                                    plot_horizontal_pot_temp(ds, level, time, path_temp, vmin_pot, vmax_pot, cmap_temp, contour_lvls_temp, dpi)
-                                case "hum":
-                                    plot_horizontal_hum(ds, masked_data=masked_data, level=level, time=time, path=path_temp, colors=colors_hum, dpi=dpi)
-                                case "cc":
-                                    plot_horizontal_cc(ds, level, time, path_temp, cmap_cloud, dpi)
-                    elif view=="vert_w_e":
-                        for lat in lats:
-                            path_temp = current_dir + f'{time_str}_{lat}_{view}_{var}.png'
-                            # if os.path.exists(path_temp): continue
-                            match var:
-                                case "temp":
-                                    plot_vertical_temp(ds, surface_p=surface_p, latlon=lat, time=time, path_temp=path_temp, cmap=cmap_temp, 
-                                                    vmin=vmin_c, vmax=vmax_c, contour_lvls_temp=contour_lvls_temp, view=view, dpi=dpi)
-                                case "pot_temp":
-                                    plot_vertical_pot_temp(ds, surface_p=surface_p, latlon=lat, time=time, path_temp=path_temp,
-                                                            vmin=vmin_pot, vmax=vmax_pot, cmap=cmap_temp, contour_lvls_temp=contour_lvls_temp, view=view, dpi=dpi)
-                                case "hum":
-                                    plot_vertical_hum(ds, surface_p=surface_p, latlon=lat, time=time, path_temp=path_temp, 
-                                                        view=view, colors=colors_hum, dpi=dpi)
-                                case "cc":
-                                    plot_vertical_cc(ds, surface_p=surface_p, latlon=lat, time=time, path_temp=path_temp, cmap=cmap_cloud, view=view, dpi=dpi)
-
-                    elif view=="vert_n_s":
-                        for lon in lons:
-                            path_temp = current_dir + f'{time_str}_{lon}_{view}_{var}.png'
-                            # if os.path.exists(path_temp): continue
-                            match var:
-                                case "temp":
-                                    plot_vertical_temp(ds, surface_p=surface_p, latlon=lon, time=time, path_temp=path_temp, cmap=cmap_temp, 
-                                                    vmin=vmin_c, vmax=vmax_c, contour_lvls_temp=contour_lvls_temp, view=view, dpi=dpi)
-                                case "pot_temp":
-                                    plot_vertical_pot_temp(ds, surface_p=surface_p, latlon=lon, time=time, path_temp=path_temp,
-                                                            vmin=vmin_pot, vmax=vmax_pot, cmap=cmap_temp, contour_lvls_temp=contour_lvls_temp, view=view, dpi=dpi)
-                                case "hum":
-                                    plot_vertical_hum(ds, surface_p=surface_p, latlon=lon, time=time, path_temp=path_temp, 
-                                                        view=view, colors=colors_hum, dpi=dpi)
-                                case "cc":
-                                    plot_vertical_cc(ds, surface_p=surface_p, latlon=lon, time=time, path_temp=path_temp, cmap=cmap_cloud, view=view, dpi=dpi)
+                        case "vert_n_s":
+                            for lon in lons:
+                                path_temp = current_dir + f'{time_str}_{lon}_{view}_{var}.png'
+                                if os.path.exists(path_temp): continue
+                                match var:
+                                    case "temp":
+                                        plot_vertical_temp(ds, surface_p=surface_p, latlon=lon, time=time, path_temp=path_temp, cmap=cmap_temp, 
+                                                        vmin=vmin_c, vmax=vmax_c, contour_lvls_temp=contour_lvls_temp, view=view, dpi=dpi)
+                                    case "pot_temp":
+                                        plot_vertical_pot_temp(ds, surface_p=surface_p, latlon=lon, time=time, path_temp=path_temp,
+                                                                vmin=vmin_pot, vmax=vmax_pot, cmap=cmap_temp, contour_lvls_temp=contour_lvls_temp, view=view, dpi=dpi)
+                                    case "eqpt":
+                                        plot_vertical_equiv_pot_temp(ds, surface_p=surface_p, latlon=lon, time=time, path_temp=path_temp,
+                                                                vmin=vmin_eqpt, vmax=vmax_eqpt, cmap=cmap_temp, contour_lvls_temp=contour_lvls_temp, view=view, dpi=dpi)
+                                    case "hum":
+                                        plot_vertical_hum(ds, surface_p=surface_p, masked_data=masked_data, latlon=lon, time=time, path_temp=path_temp, 
+                                                            view=view, colors=colors_hum, dpi=dpi)
+                                    case "cc":
+                                        plot_vertical_cc(ds, surface_p=surface_p, latlon=lon, time=time, path_temp=path_temp, cmap=cmap_cloud, view=view, dpi=dpi)

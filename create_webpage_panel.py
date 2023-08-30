@@ -81,10 +81,11 @@ latSlider = pn.widgets.DiscreteSlider(name = 'latitude °N:', options = lats, va
                                       width=w_s, height=h_s, margin=margin) 
 
 # variable selection feature
-variable_selection = pn.widgets.RadioBoxGroup(name='RadioBoxGroup', options=['Geopotential and potential Temperature',
-                                                                             "Geopotential and Temperature",
-                                                                      'relativ humidity',
-                                                                      "cloud coverage"], inline=False)
+variable_selection = pn.widgets.RadioBoxGroup(name='RadioBoxGroup', options=["geopotential, potential temperature & wind",
+                                                                             "geopotential, temperature & wind",
+                                                                             "geopotential & equivalent pot temp",
+                                                                             "relativ humidity & wind",
+                                                                             "cloud coverage"], inline=False)
 
 # default variable is potential temperature
 init_horiz_path = '../era5horiz/' + timestamps[0] + '/' + timestamps[0] + '_' + levels[0] + '_horiz_pot_temp.png'
@@ -121,14 +122,17 @@ def update_file_path(event):
     variable = variable_selection.value
     
     # when switching variable, change fileending
-    if variable == 'Geopotential and Temperature':
-        fileending = 'temp'
-    elif variable == "Geopotential and potential Temperature":
-        fileending = "pot_temp"
-    elif variable == 'relativ humidity':
-        fileending = 'hum'
-    elif variable == "cloud coverage":
-        fileending = 'cc'
+    match variable:
+        case 'geopotential, potential temperature & wind':
+            fileending = 'temp'
+        case "geopotential, temperature & wind":
+            fileending = "pot_temp"
+        case "geopotential & equivalent pot temp":
+            fileending = "eqpt"
+        case "relativ humidity & wind":
+            fileending = 'hum'
+        case "cloud coverage":
+            fileending = 'cc'
     
     # set filepaths
     horiz_image.object = '../era5horiz/' + timestamp + '/' + timestamp + '_' + level + '_horiz_' + fileending + '.png';
