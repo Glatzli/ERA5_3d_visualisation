@@ -29,16 +29,16 @@ We also included the model topography of the ECMWF model to get an overview of t
 mountain-related processes. 
 
 For the data we used ERA5 Reanalysis data of the Copernicus (https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-pressure-levels?tab=form)
-site. To create the webpage we used panel, a first draft was also done in via javascript as a string in python.
+site. To create the webpage we used panel, a first draft was also done via javascript as a string in python (file: create_webpage.py).
 
-All the plots are created beforehand locally, and are just displayed by the webpage.
+All the plots are created beforehand locally, the webpage is just displaying them.
 
 #### Note that this tool is just a first draft and not fully developed!
 
 
 ## Ideas for advancing:
 - calculate & plot vertical wind correctly? right now it is calculated via metpy, which is assuming hydrostatic conditions on synoptic scale. This is not the case for such a small-scale visualization!
-- in the equivalent pot temp plots there are some missing/nan values, these are from metpy calculation. Could these values be valid anyhow?
+- in the equivalent pot temp plots there are some missing/nan values, these are from the metpy calculation. Could these values be validated anyhow?
 - optimize the webpage display: 
 - display of time in proper format (right now the plots are scrolled changed by a discreteslider
 using the name of the plots, f.e. the date is shown as the string by which the file is saved!)
