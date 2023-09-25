@@ -72,8 +72,15 @@ pn.extension()
 timestampSlider = pn.widgets.DiscreteSlider(name = 'timestamp YYYYMMDD_HH:', options = timestamps, 
                                             value=timestamps[0], width=w_s, height=h_s, margin=margin,
                                             tooltips = True) 
-levelSlider = pn.widgets.DiscreteSlider(name = 'level [hpa]:', options = levels[::2], value = levels[0],
-                                        width=w_s, height=h_s, margin=(30, margin)) 
+levelSlider = pn.widgets.DiscreteSlider(name = 'level [hpa]:', options = ["300", 
+                                                                          "500", 
+                                                                          "700", 
+                                                                          "800", 
+                                                                          "850", 
+                                                                          "900", 
+                                                                          "950", 
+                                                                          "1000"], 
+                                        value = levels[0], width=w_s, height=h_s, margin=(30, margin)) 
 
 lonSlider = pn.widgets.DiscreteSlider(name = 'longitude °E:', options = lons, value = lons[0], 
                                       width=w_s, height=h_s, margin=(30, margin))

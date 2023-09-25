@@ -111,7 +111,7 @@ def plot_horizontal_temp(ds, level, time, path, vmin, vmax, cmap, contour_lvls_t
                                                     cmap=cmap, vmin=vmin, vmax=vmax,
                                                     add_colorbar = False)
     plt.colorbar(mesh_t, ax=ax, label='temperature [°C]')
-    create_title(ax, param="level", time=time, view="horiz")
+    create_title(ax, param=level, time=time, view="horiz")
     fig.savefig(path, dpi=dpi)
     plt.close()
 
@@ -140,7 +140,7 @@ def plot_horizontal_pot_temp(ds, level, time, path, vmin, vmax, cmap, contour_lv
                                                                 add_colorbar = False)
 
     plt.colorbar(mesh_t, ax=ax, label='pot temperature [K]')
-    create_title(ax, param="level", time=time , view="horiz")
+    create_title(ax, param=level, time=time , view="horiz")
     fig.savefig(path, dpi=dpi)
     plt.close()
 
@@ -169,7 +169,7 @@ def plot_horizontal_equiv_pot_temp(ds,*, level, time, path, vmin, vmax, cmap, co
                                                                 add_colorbar = False)
 
     plt.colorbar(mesh_t, ax=ax, label='equivalent pot temperature [K]')
-    create_title(ax, param="level", time=time , view="horiz")
+    create_title(ax, param=level, time=time , view="horiz")
     fig.savefig(path, dpi=dpi)
     plt.close()
 
@@ -220,7 +220,7 @@ def plot_horizontal_hum(ds, *, masked_data, level, time, path, dpi=200, colors=[
                                                                  ax=ax)
     cbar = create_cbar_hum(ax, mesh)
     set_ticks_hum(cbar)
-    create_title(ax, param="level", time=time, view="horiz")
+    create_title(ax, param=level, time=time, view="horiz")
     fig.savefig(path, dpi=dpi)
     plt.close()
 
@@ -245,7 +245,7 @@ def plot_horizontal_cc(ds, level, time, path, cmap_cloud, dpi=200):
     mesh_cc = ds.sel(level=level, time=time).cc.plot.contourf(ax= ax, cmap=cmap_cloud, 
                                                        add_colorbar = False)
     plt.colorbar(mesh_cc, ax=ax, label='cloud cover fraction [0-1]')
-    create_title(ax, param="level", time=time, view="horiz")
+    create_title(ax, param=level, time=time, view="horiz")
     fig.savefig(path, dpi=dpi)
     plt.close()
     #plt.show()
@@ -554,8 +554,8 @@ def define_params(ds):
     contour_lvls_temp = 10; contour_lvls_cloud = 6
     lons = ds.longitude.values[::8]
     lats = lats = ds.latitude.values[::8]
-    levels = ds.level.values[::4]
-    times = ds.time.values[:1]
+    levels = np.array([300, 500, 700, 800, 850, 900, 950, 1000]) # ds.level.values[::2]
+    times = ds.time.values
     
     vmin_c = myround(ds.t_c.min().values); vmax_c = myround(ds.t_c.max().values)
     vmin_pot = myround(ds.t_pot.min().values); vmax_pot = myround(ds.t_pot.max().values)

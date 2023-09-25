@@ -56,4 +56,4 @@ if __name__ == '__main__':
 
     ds = calc_temps(ds)
 
-    plotting_era5.plotting_era5(ds, surface_p, dpi=200, variables=["temp", "eqpt", "hum"])  #  "pot_temp", "cc"
+    plotting_era5.plotting_era5(ds, surface_p, dpi=200, variables=["temp", "pot_temp",  "eqpt", "hum", "cc"])  #  

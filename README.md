@@ -12,14 +12,16 @@ This tool creates a webpage with 3 plots of the ECMWF ERA5 Data:
 The user of the webpage can change the latitude/longitude where the cutlines should be via sliders.
 The following screenshots of the webpage are with data during a coldfront approach and Low formation 
 south of Austria from May 2023:
-![Alt text](/screenshots/temp2.png?raw=true "advancing cold front to austria 09.05. 06:00")
-![Alt text](/screenshots/hum2.png?raw=true "humidity chart 09.05. 06:00")
-![Alt text](/screenshots/cloud2.png?raw=true "cloud cover chart 09.05. 06:00")
-![Alt text](/screenshots/temp3.png?raw=true "pot temp&geopotential 10.05. 00:00")
-![Alt text](/screenshots/hum3.png?raw=true "humidity chart 09.05. 06:00")
-![Alt text](/screenshots/temp4.png?raw=true "pot temp&geopotential 10.05. 00:00")
-![Alt text](/screenshots/hum4.png?raw=true "humidity chart 09.05. 06:00")
-![Alt text](/screenshots/cloud4.png?raw=true "cloud cover chart 09.05. 06:00")
+![Alt text](/screenshots/temp1.png?raw=true "advancing cold front to austria 9.05. 06:00")
+![Alt text](/screenshots/eqpt1.png?raw=true "equivalent pot temp chart 9.05. 06:00")
+![Alt text](/screenshots/hum1.png?raw=true "humidity chart 9.05. 06:00")
+![Alt text](/screenshots/cloud1.png?raw=true "cloud cover chart 9.05. 06:00")
+![Alt text](/screenshots/temp2.png?raw=true "temp&geopotential 10.05. 00:00")
+![Alt text](/screenshots/eqpt2.png?raw=true "equivalent pot temp chart 10.05. 00:00")
+![Alt text](/screenshots/hum2.png?raw=true "humidity chart 10.05. 00:00")
+![Alt text](/screenshots/eqpt3.png?raw=true "equivalent pot temp chart 10.05. 18:00")
+![Alt text](/screenshots/hum3.png?raw=true "humidity chart 10.05. 18:00")
+![Alt text](/screenshots/cloud3.png?raw=true "cloud cover chart 10.05. 18:00")
 
 
 We included plots of potential temperature & geopotential with the corresponding wind vectors 
