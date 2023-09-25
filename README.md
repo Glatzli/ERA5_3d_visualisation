@@ -24,8 +24,8 @@ south of Austria from May 2023:
 ![Alt text](/screenshots/cloud3.png?raw=true "cloud cover chart 10.05. 18:00")
 
 
-We included plots of potential temperature & geopotential with the corresponding wind vectors 
-in each plane, temperature & geopotential, humidity and cloud coverage.
+We included plots of potential temperature & geopotential with the corresponding wind vectors
+in each plane, temperature & geopotential with wind, equivalent pot temp&geop, humidity with wind and cloud coverage.
 
 We also included the model topography of the ECMWF model to get an overview of the
 mountain-related processes. 
